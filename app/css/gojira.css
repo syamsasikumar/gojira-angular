@@ -6,6 +6,7 @@
 
 .breadcrumb{
 	text-transform:uppercase;	
+	margin:0px;
 }
 
 .nav{
@@ -48,10 +49,18 @@
 
 .logo{
 	margin:auto;
-	padding:10px 0px;
+	padding:20px;
 	display:block;
+	background-color: #16A085;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 24px;
+	color:#FFFFFF;
 }
-
+.user-feed{
+	color:#FFFFFF;
+	background-color: #2980B9;
+}
 footer{
 	background-color: #edeff1;
 	color: #bac1c8;
