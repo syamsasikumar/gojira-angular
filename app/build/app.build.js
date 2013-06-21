@@ -2,7 +2,7 @@
   appDir: "../",
   baseUrl: "scripts",
   dir: "../../dist",
-  name: 'main',
-  mainConfigFile: '../scripts/main.js',
+  name: 'gojira',
+  mainConfigFile: '../scripts/gojira.js',
   optimizeCss: 'standard'
 })

@@ -1,1 +1,60 @@
-@import 'bootstrap.min.css';
+@import 'bootstrap.css';
+@font-face {
+    font-family: "flat-ui";
+    src: url(http://www.example.org/mycustomfont.ttf) format("truetype");
+}
+
+.breadcrumb{
+	text-transform:uppercase;	
+}
+
+.nav{
+	margin:0px;
+}
+
+.nav img{
+	display:block;
+	text-align: center;
+	margin:auto;
+}
+
+.main-container{
+	padding:0px;
+}
+
+.right-pane{
+	
+}
+
+.side-bar{
+	color:#FFFFFF;
+	background-color: #34495E;
+	padding:0px;
+	height:100%;
+}
+
+.side-bar ul li {
+	text-align:center;
+	padding:10px;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+.side-bar li:hover, .active-nav{	
+	background-color: #2C3E50;
+	color:#16A085;
+	cursor:pointer;
+}
+
+.logo{
+	margin:auto;
+	padding:10px 0px;
+	display:block;
+}
+
+footer{
+	background-color: #edeff1;
+	color: #bac1c8;
+	font-size: 15px;
+	padding: 0;
+}
