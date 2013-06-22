@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html ng-app="gojira" ng-controller="AppCtrl">
+  <head>
+    <title>gojira</title>
+
+    <!-- your compiles CSS -->
+    <link rel="stylesheet" type="text/css" href="assets/<%= grunt.config.get('pkg.name') %>.css"/>
+
+    <!--[if IE 7>
+    <link rel="stylesheet" href="assets/font-awesome-ie7.min.css>
+    <![endif]-->
+
+    <!-- libs.js contains all of the concatenated third-party libraries -->
+    <script type="text/javascript" src="assets/libs.js"></script>
+
+    <!-- this is your compiled, minified application code -->
+    <script type="text/javascript" src="assets/<%= grunt.config.get('pkg.name') %>.js"></script>
+  </head>
+  <body>
+   <div class="container-fluid main-container">
+    <div class="logo">
+    LOGO
+      </div>
+      <ul class="breadcrumb">
+        <li><a href="#">Home</a> <span class="divider">/</span></li>
+        <li><a href="#">Rate</a> <span class="divider">/</span></li>
+        <li class="active">Gojira</li>
+      </ul>
+      <div class="row-fluid">
+        <div class="span1">
+          <div class="well side-bar">
+            <ul class="nav">
+              <li class="active-nav">
+                <img src="http://designmodo.github.io/Flat-UI/images/icons/Pensils@2x.png" />
+                Rate
+              </li>            
+              <li>
+                <img src="http://designmodo.github.io/Flat-UI/images/icons/Chat@2x.png" />
+                My Ratings 
+              </li>
+              <li>
+                <img src="http://designmodo.github.io/Flat-UI/images/icons/Calendar@2x.png" />
+                My Lists
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="span9 right-pane">
+          <div class="content">
+          </div>
+        </div>
+        <div class="span2 user-feed">
+        </div>
+      </div>
+      <footer>Footer blah! blah! blah!</footer>
+  </body>
+</html>

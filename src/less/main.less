@@ -1,0 +1,137 @@
+/**
+ * This is the main application stylesheet. It should include or import all
+ * stylesheets used throughout the application as this is the only stylesheet in
+ * the Grunt configuration that is automatically processed.
+ */
+
+
+/**
+ * First, we include the Twitter Bootstrap LESS files. Only the ones used in the
+ * project should be imported as the rest are just wasting space.
+ */
+
+@import '../../vendor/bootstrap/less/mixins.less';
+@import '../../vendor/bootstrap/less/reset.less';
+@import '../../vendor/bootstrap/less/utilities.less';
+@import '../../vendor/bootstrap/less/scaffolding.less';
+@import '../../vendor/bootstrap/less/type.less';
+@import '../../vendor/bootstrap/less/grid.less';
+@import '../../vendor/bootstrap/less/layouts.less';
+@import '../../vendor/bootstrap/less/navs.less';
+@import '../../vendor/bootstrap/less/navbar.less';
+@import '../../vendor/bootstrap/less/buttons.less';
+@import '../../vendor/bootstrap/less/button-groups.less';
+@import '../../vendor/bootstrap/less/dropdowns.less';
+
+
+/**
+ * And now any configurations for our custom fonts.
+ */
+
+@import 'font-awesome.less';
+
+/**
+ * This is our main variables file. It in turn imports the `variables` file from
+ * Twitter Bootstrap. We must include it last so we can overwrite any variable
+ * definitions in our imported stylesheets.
+ */
+
+@import 'variables.less';
+
+
+/**
+ * Typography
+ */
+
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto Regular'), local('Roboto-Regular'), url(fonts/Roboto-Regular.woff) format('woff');
+}
+
+.breadcrumb{
+  padding: 8px 15px;
+  margin: 0px;
+  list-style: none;
+  background-color: #f5f5f5;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  li{
+    display: inline-block;
+    text-shadow: 0 1px 0 #ffffff;
+  }
+  .active{
+    color: #999999;
+  }
+}
+
+.nav{
+  margin:0px;
+  img{
+    display:block;
+    text-align: center;
+    margin:auto;
+  }
+}
+
+
+.main-container{
+  padding:0px;
+}
+
+.side-bar {
+  color:#FFFFFF;
+  background-color: #34495E;
+  padding:0px;
+  height:100%;
+  li:hover, .active-nav{
+    background-color: #2C3E50;
+    color:#16A085;
+    cursor:pointer;
+  }
+  ul{
+    li{
+      text-align:center;
+      padding:10px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+  }
+}
+
+.logo{
+  margin:auto;
+  padding:20px;
+  display:block;
+  background-color: #16A085;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 24px;
+  color:#FFFFFF;
+}
+
+.user-feed{
+  color:#FFFFFF;
+  background-color: #2980B9;
+}
+
+footer{
+  background-color: #edeff1;
+  color: #bac1c8;
+  font-size: 15px;
+  padding: 0;
+}
+
+
+/**
+ * Now that all app-wide styles have been applied, we can load the styles for
+ * all the submodules and components we are using. 
+ *
+ * TODO: In a later version of this boilerplate, I'd like to automate this.
+ * e.g. @import '../app/home/home.less';
+ */
+
+
+

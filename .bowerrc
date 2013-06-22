@@ -1,3 +1,4 @@
 {
-  "directory": "app/scripts/libs"
+  "directory": "vendor",
+  "json": "bower.json"
 }
