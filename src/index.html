@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="gojira" ng-controller="AppCtrl">
+<html ng-app="gojira">
   <head>
     <title>gojira</title>
 
@@ -21,32 +21,32 @@
     <div class="logo">
     LOGO
       </div>
-      <ul class="breadcrumb">
+      <ul class="breadcrumb" ng-controller="BreadCrumbCtr1">
         <li><a href="#">Home</a> <span class="divider">/</span></li>
         <li><a href="#">Rate</a> <span class="divider">/</span></li>
-        <li class="active">Gojira</li>
+        <li class="active">{{content}}</li>
       </ul>
-      <div class="row-fluid">
-        <div class="span1">
+      <div class="row-fluid" ng-controller="AppCtrl">
+        <div class="span2">
           <div class="well side-bar">
             <ul class="nav">
               <li class="active-nav">
-                <img src="http://designmodo.github.io/Flat-UI/images/icons/Pensils@2x.png" />
+                <img class="img-circle" ph-img="60x60" />
                 Rate
               </li>            
               <li>
-                <img src="http://designmodo.github.io/Flat-UI/images/icons/Chat@2x.png" />
+                <img class="img-circle" ph-img="60x60" />
                 My Ratings 
               </li>
               <li>
-                <img src="http://designmodo.github.io/Flat-UI/images/icons/Calendar@2x.png" />
+                <img class="img-circle" ph-img="60x60" />
                 My Lists
               </li>
             </ul>
           </div>
         </div>
-        <div class="span9 right-pane">
-          <div class="content">
+        <div class="span8 right-pane">
+          <div class="content" ng-view>
           </div>
         </div>
         <div class="span2 user-feed">

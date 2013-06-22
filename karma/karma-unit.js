@@ -54,7 +54,5 @@ autoWatch = false;
  * open and the tests will automatically occur there during the build. This has
  * the aesthetic advantage of not launching a browser every time you save.
  */
-browsers = [
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
-];
+
 
