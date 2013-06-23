@@ -2,20 +2,19 @@ angular.module( 'gojira', [
   'templates-app',
   'templates-component',
   'ui.route',
-  'placeholders',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'gojira.user',
+  'gojira.ratings',
+  'gojira.lists',
+  'gojira.search'
 ])
 
 .config( function myAppConfig ( $routeProvider ) {
-  $routeProvider.otherwise({ redirectTo: '/' });
+  $routeProvider.otherwise({ redirectTo: '/search' });
 })
 
 
 .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
-	$scope.content="Test";
-})
-
-.controller( 'BreadCrumbCtr1', function AppCtrl ( $scope, $location ) {
 	$scope.content="Test";
 })
 

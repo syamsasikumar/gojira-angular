@@ -17,41 +17,52 @@
     <script type="text/javascript" src="assets/<%= grunt.config.get('pkg.name') %>.js"></script>
   </head>
   <body>
-   <div class="container-fluid main-container">
-    <div class="logo">
-    LOGO
+    <div class="container-fluid main-container">
+      <div class="nav-bar">
+        <ul class="top-nav">
+          <li ui-route="/search">
+            <a href="#/search" ng-class="{active:$uiRoute}">
+              <i class="icon-search"></i>
+              Search
+            </a>
+          </li>            
+          <li ui-route="/ratings">
+            <a href="#/ratings" ng-class="{active:$uiRoute}">
+              <i class="icon-thumbs-up"></i>
+              My Ratings
+            </a> 
+          </li>
+          <li ui-route="/lists">
+            <a href="#/lists" ng-class="{active:$uiRoute}">
+              <i class="icon-list"></i>
+              My Lists
+            </a>
+          </li>
+        </ul>        
       </div>
-      <ul class="breadcrumb" ng-controller="BreadCrumbCtr1">
-        <li><a href="#">Home</a> <span class="divider">/</span></li>
-        <li><a href="#">Rate</a> <span class="divider">/</span></li>
-        <li class="active">{{content}}</li>
-      </ul>
-      <div class="row-fluid" ng-controller="AppCtrl">
-        <div class="span2">
-          <div class="well side-bar">
-            <ul class="nav">
-              <li class="active-nav">
-                <img class="img-circle" ph-img="60x60" />
-                Rate
-              </li>            
-              <li>
-                <img class="img-circle" ph-img="60x60" />
-                My Ratings 
-              </li>
-              <li>
-                <img class="img-circle" ph-img="60x60" />
-                My Lists
-              </li>
-            </ul>
-          </div>
+      <div class="row-fluid">
+        <div class="span2 user-feed"  ng-controller="UserCtrl">
+          <div ng-include src="userContent" class="user-box">
+          </div> 
         </div>
-        <div class="span8 right-pane">
+        <div class="span10 left-pane" ng-controller="AppCtrl">        
           <div class="content" ng-view>
           </div>
         </div>
-        <div class="span2 user-feed">
-        </div>
       </div>
-      <footer>Footer blah! blah! blah!</footer>
+    </div>  
+    <footer>
+      <div class="footer-inner">
+        <ul class="social">
+          <li><a target="_blank" href="https://plus.google.com/105801177323982468057/posts"><i class="icon-google-plus-sign"></i></a></li>
+          <li><a target="_blank" href="http://twitter.com/syamsasikumar"><i class="icon-twitter-sign"></i></a></li>
+          <li><a target="_blank" href="http://linkedin.com/in/syamsasikumar"><i class="icon-linkedin-sign"></i></a></li>
+          <li><a target="_blank" href="http://github.com/syamsasikumar"><i class="icon-github-sign"></i></a></li>
+        </ul>
+        <p>
+          (c) 2013 Syam Sasikumar. Built using <a href="http://angularjs.org/" target="_blank">Angularjs</a>. Data provided by <a href="http://www.themoviedb.org/" target="_blank">TMDB</a> API.
+        </p>
+      </div>
+    </footer>
   </body>
 </html>
