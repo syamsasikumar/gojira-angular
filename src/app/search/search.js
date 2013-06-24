@@ -16,14 +16,12 @@ angular.module( 'gojira.search', [
   $scope.conf = ApiConfigService.getConf();
   $scope.auto = function(){
     if(!$scope.conf.isSet){
-      console.log('init');
       $http.post($scope.conf.url + '?conf=1', {}, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         }).
         success(function(data, status) {
           $scope.conf.image.baseUrl = data.images.base_url;
           ApiConfigService.setConf($scope.conf);
-          $scope.imgUrl = $scope.conf.image.baseUrl;
           $scope.fetch();
         }).
         error(function(data, status) {
@@ -34,6 +32,7 @@ angular.module( 'gojira.search', [
     }
   };
   $scope.fetch = function() {
+    $scope.imgUrl = $scope.conf.image.baseUrl;
     if($scope.search == ''){
       var url = $scope.conf.url + '?popular=1';
     }else{
