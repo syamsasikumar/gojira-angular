@@ -1,3 +1,15 @@
-<div class="row-fluid">
-	<input type="text" class="span9 offset1" placeholder="Type to search for movies" ng-model="search" ng-keydown="populate()"/>
+<div class="row-fluid search-input">
+	<input type="text" class="span9 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>
+</div>
+<hr/>
+<h4>{{listTitle}}</h4>
+<div class="row-fluid search-results" >
+	<div class="list-result row-fluid" ng-repeat="movie in movies" >
+		<div class="span2">
+			<img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path"></img>
+		</div>
+		<div class="span10">
+			<h4>{{movie.title}} ({{movie.release_date.substring(0,4)}})</h3>
+	 	</div>
+	</div>
 </div>

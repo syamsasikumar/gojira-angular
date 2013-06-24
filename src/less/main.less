@@ -21,8 +21,14 @@
 @import '../../vendor/bootstrap/less/dropdowns.less';
 @import '../../vendor/bootstrap/less/buttons.less';
 
+@main-nav-back: rgba(25, 25, 25, 0.8);
+@content-back: #2a2a2a;
+@body-back: #1a1a1a;
+@body-color: #999;
+@input-border:#bdc3c7;
+
 input{
-  border: 2px solid #bdc3c7;
+  border: 2px solid @input-border;
   color: #34495e;
   font-family: "Lato", sans-serif;
   font-size: 14px;
@@ -75,8 +81,8 @@ input{
 }
 
 body{
-  background:#1a1a1a;
-  color:#999;
+  background: @body-back;
+  color: @body-color;
   font-family: 'Droid Sans', sans-serif;
 }
 
@@ -93,7 +99,7 @@ a {
 
 .nav-bar {
   list-style: none;
-  background-color: rgba(25, 25, 25, 0.8);
+  background-color: @main-nav-back;
   padding:0px;
   height:100%;
   font-weight:bold; 
@@ -116,26 +122,14 @@ a {
   cursor:pointer;
 } 
 
-.logo{
-  margin:auto;
-  padding:20px;
-  display:block;
-  background-color: #16A085;
-  text-transform: uppercase;
-  font-weight: bold;
-  font-size: 24px;
-  color:#FFFFFF;
-}
-
-
 .content{
   padding:10px;
-  background-color: #2a2a2a;
+  background-color: @content-back;
   min-height:500px;
 }
 
 footer{
-  background-color: rgba(25, 25, 25, 0.8);
+  background-color: @main-nav-back;
   font-size: 15px;
   padding: 0;
   margin-top: 50px;
@@ -163,5 +157,34 @@ footer{
   }  
 }
 
+/**
+* Animation
+*/
+.enter-view-setup{
+    -webkit-transition: 2s linear all; 
+    -webkit-transition: 2s linear all;
+    -moz-transition: 2s linear all;
+    -o-transition: 2s linear all;
+    transition: 2s linear all;
+    opacity: 0;
+}
+.enter-view-setup.enter-view-start{
+    opacity: 1;
+}
+
 /** modules **/
 @import '../app/user/user.less';
+@import '../app/search/search.less';
+
+.search-input{
+  padding-top:10px;
+}
+.list-result{
+  padding: 10px 0px;
+  margin:5px 0px;
+  border: 1px solid @input-border;
+  img{
+    display:block;
+    margin:0 auto;
+  }
+}

@@ -140,7 +140,7 @@ module.exports = function ( grunt ) {
        */
       libs: {
         src: [ 
-          'build/angular/angular.js'
+          'build/angular/angular.min.js'
         ],
         dest: '<%= distdir %>/assets/libs.js'
       }
