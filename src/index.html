@@ -40,12 +40,16 @@
           </li>
         </ul>        
       </div>
+      <div class="user-feed row-fluid" ng-controller="UserCtrl" >
+          <a class="login-btn" ng-click="toggleUser()">
+            <i class="icon-unlock"></i>
+            Login / Register
+          </a> 
+          <div ng-include src="userContent" class="user-box" collapse="isCollapsed">
+          </div>
+      </div>
       <div class="row-fluid">
-        <div class="span2 user-feed"  ng-controller="UserCtrl">
-          <div ng-include src="userContent" class="user-box">
-          </div> 
-        </div>
-        <div class="span10 left-pane" ng-controller="AppCtrl">        
+        <div class="span12 left-pane" ng-controller="AppCtrl">        
           <div class="content" ng-view ng-animate="{enter: 'enter-view'}">
           </div>
         </div>

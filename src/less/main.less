@@ -26,6 +26,7 @@
 @body-back: #1a1a1a;
 @body-color: #999;
 @input-border:#bdc3c7;
+@user-back:#f1c40f;
 
 input{
   border: 2px solid @input-border;
@@ -33,18 +34,8 @@ input{
   font-family: "Lato", sans-serif;
   font-size: 14px;
   padding: 8px 5px;
-  height: 21px;
+  height: 25px;
   text-indent: 6px;
-  -webkit-appearance: none;
-  .border-radius(6px);
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none;
-  -webkit-transition: border .25s linear, color .25s linear;
-  -moz-transition: border .25s linear, color .25s linear;
-  -o-transition: border .25s linear, color .25s linear;
-  transition: border .25s linear, color .25s linear;
-  -webkit-backface-visibility: hidden;
 }
 
 
@@ -128,6 +119,21 @@ a {
   min-height:500px;
 }
 
+.login-btn{
+  padding:10px;
+  cursor:pointer;
+  position:absolute;
+  top:0px;
+  right:0px;
+  text-decoration:none;
+  font-weight:bold;
+  &:hover{
+    text-decoration:none;
+    color:@user-back;
+  }
+}
+
+
 footer{
   background-color: @main-nav-back;
   font-size: 15px;
@@ -175,3 +181,4 @@ footer{
 /** modules **/
 @import '../app/user/user.less';
 @import '../app/search/search.less';
+
