@@ -10,8 +10,9 @@
 					<img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img"></img>
 				</div>
 				<div class="span11">
-					<h4><a href="#/movie/{{movie.id}}">{{movie.title}}</a> ({{movie.release_date.substring(0,4)}})</h3>
-				    User Rating: <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title.) 
+					<h4><a href="#/movie/{{movie.id}}">{{movie.title}}</a> ( {{movie.release_date.substring(0,4)}} )</h3>
+				    <span class="property"> User Rating : </span>
+				    <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title.) 
 			 	</div>
 			</div>
 		</div>

@@ -19,20 +19,20 @@
 		</div>
 		<div class="row-fluid">
 			<h5>Overview : </h5>
-			<p>
+			<p class="left-padded-content">
 				{{movie.overview}}
 			</p>
 		</div>	
 		<div class="row-fluid">
 			<div class="span6" ng-if="movie.casts.cast">
 				<h5> Casts : </h5>
-				<div class="row-fluid message" ng-show="!showAllCast">
+				<div class="row-fluid message left-padded-content" ng-show="!showAllCast">
 					Showing top casts. Click <a ng-click="showAllCast = true" >here</a> to show all casts.
 				</div>
-				<div class="row-fluid message" ng-show="showAllCast">
+				<div class="row-fluid message left-padded-content" ng-show="showAllCast">
 					Showing all casts. Click <a ng-click="showAllCast = false" >here</a> to show only top casts.
 				</div>
-				<div class="cast-result row-fluid" ng-repeat="(index,cast) in movie.casts.cast">
+				<div class="cast-result row-fluid left-padded-content" ng-repeat="(index,cast) in movie.casts.cast">
 					<div class="span1" ng-show="index < 10 || showAllCast">
 						<img ng-src="{{imgUrl}}/w92/{{cast.profile_path}}" ng-if="cast.profile_path" ng-show="cast.profile_path"></img>
 						<i class="icon-question-sign" ng-show="!cast.profile_path"></i>
@@ -53,7 +53,7 @@
 				<div class="span2 movie-leaf" ng-repeat="(index, s_movie) in movie.similar_movies.results">
 					<a href="#/movie/{{s_movie.id}}" ng-show="index < 6">
 						<img ng-src="{{imgUrl}}/w92/{{s_movie.poster_path}}" ng-if="s_movie.poster_path"></img>
-						<h6 >{{s_movie.title}}</h6>
+						<h6 >{{s_movie.title}} ( {{s_movie.release_date.substring(0,4)}} )</h6>
 					</a>
 				</div>
 			</div>
