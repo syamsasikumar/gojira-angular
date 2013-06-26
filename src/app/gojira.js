@@ -6,7 +6,8 @@ angular.module( 'gojira', [
   'gojira.user',
   'gojira.ratings',
   'gojira.lists',
-  'gojira.search'
+  'gojira.search',
+  'gojira.movie'
 ])
 
 .config( function myAppConfig ( $routeProvider ) {
@@ -17,6 +18,5 @@ angular.module( 'gojira', [
 .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
 	$scope.content="Test";
 })
-
 ;
 

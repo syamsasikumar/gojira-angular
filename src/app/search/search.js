@@ -1,5 +1,4 @@
 angular.module( 'gojira.search', [
-  'placeholders',
   'ui.bootstrap',
   'Conf'
 ])
