@@ -12,21 +12,21 @@ angular.module( 'gojira.movie', [
 })
 
 .controller( 'MovieCtrl', function MovieCtrl( $scope, $http, $routeParams, ApiConfigService ) {
-	$scope.id = $routeParams.id;
-	$scope.conf = ApiConfigService.getConf();
-	$scope.showAllCast = false;
+  $scope.id = $routeParams.id;
+  $scope.conf = ApiConfigService.getConf();
+  $scope.showAllCast = false;
   $scope.getBackground = function(url, path){
-  	return {
-  		background:'url( \'' + url + '/original/' + path + '\')'
-  	};
-  };	
+    return {
+      background:'url( \'' + url + '/original/' + path + '\')'
+    };
+  };  
   $scope.fetch = function(){
-		$scope.imgUrl = $scope.conf.image.baseUrl;
-  	var url = $scope.conf.url + '?movie=' + $scope.id;  
-  	$http.post(url, {}, {
-    	headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-  	}).
-    	success(function(data, status) {
+    $scope.imgUrl = $scope.conf.image.baseUrl;
+    var url = $scope.conf.url + '?movie=' + $scope.id;  
+    $http.post(url, {}, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    }).
+      success(function(data, status) {
         $scope.status = status;
         $scope.movie = data;
       }).
@@ -35,7 +35,7 @@ angular.module( 'gojira.movie', [
         $scope.status = status;
     });
   };
-	if(!$scope.conf.isSet){
+  if(!$scope.conf.isSet){
     $http.post($scope.conf.url + '?conf=1', {}, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).

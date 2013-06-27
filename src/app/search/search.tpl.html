@@ -1,22 +1,22 @@
 <div class="row-fluid search-input">
-	<input type="text" class="span9 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>
+  <input type="text" class="span9 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>
 </div>
 <h3>{{listTitle}}</h3>
  <tabset>
-	<tab heading="List">
-		<div class="row-fluid search-results" >
-			<div class="list-result row-fluid" ng-repeat="movie in movies" >
-				<div class="span1">
-					<img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img"></img>
-				</div>
-				<div class="span11">
-					<h4><a href="#/movie/{{movie.id}}">{{movie.title}}</a> ( {{movie.release_date.substring(0,4)}} )</h3>
-				    <span class="property"> User Rating : </span>
-				    <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title.) 
-			 	</div>
-			</div>
-		</div>
-	</tab>
-	<tab heading="Grid">
-	</tab>
+  <tab heading="List">
+    <div class="row-fluid search-results" >
+      <div class="list-result row-fluid" ng-repeat="movie in movies" >
+        <div class="span1">
+          <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img"></img>
+        </div>
+        <div class="span11">
+          <h4><a href="#/movie/{{movie.id}}">{{movie.title}}</a> ( {{movie.release_date.substring(0,4)}} )</h3>
+            <span class="property"> User Rating : </span>
+            <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title.) 
+         </div>
+      </div>
+    </div>
+  </tab>
+  <tab heading="Grid">
+  </tab>
 </tabset>

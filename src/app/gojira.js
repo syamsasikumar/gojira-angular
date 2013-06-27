@@ -16,7 +16,7 @@ angular.module( 'gojira', [
 
 
 .controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
-	$scope.content="Test";
+  $scope.content="Test";
 })
 ;
 

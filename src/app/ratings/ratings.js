@@ -11,7 +11,7 @@ angular.module( 'gojira.ratings', [
 })
 
 .controller( 'RatingsCtrl', function RatingsCtrl( $scope ) {
-	$scope.message = "on ratings page";
+  $scope.message = "on ratings page";
 })
 
 ;

@@ -1,14 +1,14 @@
 angular.module('Conf', [])
 .factory('ApiConfigService', function($http){
-	var conf = {
-		url:'http://daimajin.herokuapp.com/',
+  var conf = {
+    url:'http://daimajin.herokuapp.com/',
     image:{
       baseUrl:''
     },
     isSet:false
-	};
+  };
 
-	return {
+  return {
     getConf : function(){
       return conf;
     },
