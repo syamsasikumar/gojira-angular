@@ -107,10 +107,10 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
     "<div class=\"row-fluid\">\n" +
     "  <div class=\"row-fluid\" >\n" +
     "    <div class=\"span4 offset2\">\n" +
-    "      <img src=\"/assets/images/yoda.png\"></img>\n" +
+    "      <img src=\"https://raw.github.com/syamsasikumar/gojira/gh-pages/assets/images/luke.png\"></img>\n" +
     "    </div>\n" +
     "    <div class=\"span4\">\n" +
-    "      <img src=\"/assets/images/luke.png\"></img>\n" +
+    "      <img src=\"https://raw.github.com/syamsasikumar/gojira/gh-pages/assets/images/luke.png\"></img>\n" +
     "    </div>\n" +
     "  </div>\n" +
     "  <div class=\"row-fluid\">\n" +
