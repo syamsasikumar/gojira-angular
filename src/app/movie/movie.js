@@ -23,7 +23,7 @@ angular.module( 'gojira.movie', [
   $scope.fetch = function(){
     $scope.imgUrl = $scope.conf.image.baseUrl;
     var url = $scope.conf.url.movies + '/' + $scope.id;  
-    $http.post(url, {}, {
+    $http.get(url, {}, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
     }).
       success(function(data, status) {
@@ -36,7 +36,7 @@ angular.module( 'gojira.movie', [
     });
   };
   if(!$scope.conf.isSet){
-    $http.post($scope.conf.url.movies + '/conf', {}, {
+    $http.get($scope.conf.url.movies + '/conf', {}, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
       success(function(data, status) {
