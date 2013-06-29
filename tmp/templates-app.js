@@ -8,12 +8,15 @@ angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($temp
 angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("movie/movie.tpl.html",
     "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\">\n" +
-    "  <div class=\"movie-container\">\n" +
-    "    <div class=\"row-fluid\">\n" +
+    "  <div class=\"row-fluid\" ng-hide=\"loaded\">\n" +
+    "    Loading..\n" +
+    "  </div>\n" +
+    "  <div class=\"movie-container\" ng-show=\"loaded\">\n" +
+    "    <div class=\"row-fluid\" >\n" +
     "      <div class=\"span1\">\n" +
     "        <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" ></img>\n" +
     "      </div>\n" +
-    "      <div class=\"span11\">\n" +
+    "      <div class=\"span8\">\n" +
     "        <h3>{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</h3>\n" +
     "          <p ng-if=\"movie.tagline\"> \n" +
     "            <span class=\"property\"> Tag Line : </span> \n" +
@@ -24,6 +27,14 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
     "           <p ng-show=\"movie.genres\">\n" +
     "             <span class=\"property\">Genres : </span>\n" +
     "             <span class=\"genre\" ng-repeat=\"(index,genre) in movie.genres\"> {{genre.name}} <span class=\"sep\" ng-show=\"index < (movie.genres.length -1)\"> | </span></span></p>\n" +
+    "       </div>\n" +
+    "       <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
+    "          <div class=\"rating\">\n" +
+    "            {{movie.vote_average}} <i class=\"icon-star\"></i>\n" +
+    "          </div>\n" +
+    "          <div class=\"rating-by\">\n" +
+    "            {{movie.vote_count}} users\n" +
+    "          </div>\n" +
     "       </div>\n" +
     "    </div>\n" +
     "    <div class=\"row-fluid\">\n" +
@@ -82,24 +93,29 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "  <input type=\"text\" class=\"span9 offset1\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"auto()\"/>\n" +
     "</div>\n" +
     "<h3>{{listTitle}}</h3>\n" +
-    " <tabset>\n" +
-    "  <tab heading=\"List\">\n" +
-    "    <div class=\"row-fluid search-results\" >\n" +
-    "      <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
-    "        <div class=\"span1\">\n" +
-    "          <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
-    "        </div>\n" +
-    "        <div class=\"span11\">\n" +
-    "          <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h3>\n" +
-    "            <span class=\"property\"> User Rating : </span>\n" +
-    "            <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title.) \n" +
-    "         </div>\n" +
-    "      </div>\n" +
+    "<div class=\"row-fluid search-results\" ng-hide=\"loaded\">\n" +
+    "  Loading..\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"loaded\">\n" +
+    "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "    <div class=\"span1\">\n" +
+    "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
     "    </div>\n" +
-    "  </tab>\n" +
-    "  <tab heading=\"Grid\">\n" +
-    "  </tab>\n" +
-    "</tabset>");
+    "    <div class=\"span8\">\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h3>\n" +
+    "        <span class=\"property\"> User Rating : </span>\n" +
+    "        <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating>\n" +
+    "     </div>\n" +
+    "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
+    "        <div class=\"rating\">\n" +
+    "          {{movie.vote_average}} <i class=\"icon-star\"></i>\n" +
+    "        </div>\n" +
+    "        <div class=\"rating-by\">\n" +
+    "          {{movie.vote_count}} users\n" +
+    "        </div>\n" +
+    "     </div>\n" +
+    "  </div>\n" +
+    "</div>");
 }]);
 
 angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templateCache) {

@@ -50,7 +50,8 @@ angular.module( 'gojira.lists', [
 angular.module( 'gojira.movie', [
   'ui.bootstrap',
   'Conf',
-  'Auth'
+  'Auth',
+  'Util'
 ])
 
 .config(function config( $routeProvider ) {
@@ -60,12 +61,15 @@ angular.module( 'gojira.movie', [
   });
 })
 
-.controller( 'MovieCtrl', function MovieCtrl( $scope, $http, $routeParams, ApiConfigService ) {
+.controller( 'MovieCtrl', function MovieCtrl( $scope, $http, $routeParams, ApiConfigService, UtilityService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;
   $scope.castMarkup = [];
-  
+  $scope.loaded = false;
+  $scope.getRatingClass = function(rating){
+    return UtilityService.getRatingClass(rating);
+  }
   $scope.getPerson =function(id, name, img){
     var imgPath = $scope.imgUrl + '/w92/' + img;
     if($scope.castMarkup[id] == undefined){
@@ -74,7 +78,6 @@ angular.module( 'gojira.movie', [
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
       success(function(data, status) {
-        console.log('here');
         $scope.castMarkup[id] = 
         '<h5>' + name + '</h5>' 
         + '<div class="row-fluid"><div class="span4"><img src="' + imgPath + '" ></img></div><div class="span8">'
@@ -119,6 +122,7 @@ angular.module( 'gojira.movie', [
         $scope.getPerson(cast.id, cast.name, cast.profile_path);
       });
       $scope.movie = data;
+      $scope.loaded = true;
     }).
     error(function(data, status) {
       $scope.data = data || "Request failed";
@@ -161,7 +165,8 @@ angular.module( 'gojira.ratings', [
 ;
 angular.module( 'gojira.search', [
   'ui.bootstrap',
-  'Conf'
+  'Conf',
+  'Util'
 ])
 
 .config(function config( $routeProvider ) {
@@ -171,9 +176,13 @@ angular.module( 'gojira.search', [
   });
 })
 
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $http, ApiConfigService ) {
-	$scope.search = '';
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $http, ApiConfigService, UtilityService ) {
+  $scope.search = '';
+  $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
+  $scope.getRatingClass = function(rating){
+    return UtilityService.getRatingClass(rating);
+  }
   $scope.auto = function(){
     if(!$scope.conf.isSet){
       $http.get($scope.conf.url.movies + '/conf', {}, {
@@ -192,6 +201,7 @@ angular.module( 'gojira.search', [
     }
   };
   $scope.fetch = function() {
+    $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
     if($scope.search == ''){
       var url = $scope.conf.url.movies + '/popular';
@@ -202,6 +212,7 @@ angular.module( 'gojira.search', [
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
       success(function(data, status) {
+        $scope.loaded = true;
         $scope.status = status;
         $scope.movies = data.results;
         if($scope.search == ''){
@@ -290,6 +301,21 @@ angular.module('Auth', [])
     }
   }
 });
+angular.module('Util', [])
+.factory('UtilityService', function(){
+
+  return {
+    getRatingClass : function(rating){
+      if(rating < 5){
+        return "low";
+      }else if (rating < 7){
+        return "med";
+      }else {
+        return "high";
+      }
+    }
+  };
+});
 angular.module('templates-app', ['lists/lists.tpl.html', 'movie/movie.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
 
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
@@ -300,12 +326,15 @@ angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($temp
 angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("movie/movie.tpl.html",
     "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\">\n" +
-    "  <div class=\"movie-container\">\n" +
-    "    <div class=\"row-fluid\">\n" +
+    "  <div class=\"row-fluid\" ng-hide=\"loaded\">\n" +
+    "    Loading..\n" +
+    "  </div>\n" +
+    "  <div class=\"movie-container\" ng-show=\"loaded\">\n" +
+    "    <div class=\"row-fluid\" >\n" +
     "      <div class=\"span1\">\n" +
     "        <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" ></img>\n" +
     "      </div>\n" +
-    "      <div class=\"span11\">\n" +
+    "      <div class=\"span8\">\n" +
     "        <h3>{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</h3>\n" +
     "          <p ng-if=\"movie.tagline\"> \n" +
     "            <span class=\"property\"> Tag Line : </span> \n" +
@@ -316,6 +345,14 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
     "           <p ng-show=\"movie.genres\">\n" +
     "             <span class=\"property\">Genres : </span>\n" +
     "             <span class=\"genre\" ng-repeat=\"(index,genre) in movie.genres\"> {{genre.name}} <span class=\"sep\" ng-show=\"index < (movie.genres.length -1)\"> | </span></span></p>\n" +
+    "       </div>\n" +
+    "       <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
+    "          <div class=\"rating\">\n" +
+    "            {{movie.vote_average}} <i class=\"icon-star\"></i>\n" +
+    "          </div>\n" +
+    "          <div class=\"rating-by\">\n" +
+    "            {{movie.vote_count}} users\n" +
+    "          </div>\n" +
     "       </div>\n" +
     "    </div>\n" +
     "    <div class=\"row-fluid\">\n" +
@@ -374,24 +411,29 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "  <input type=\"text\" class=\"span9 offset1\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"auto()\"/>\n" +
     "</div>\n" +
     "<h3>{{listTitle}}</h3>\n" +
-    " <tabset>\n" +
-    "  <tab heading=\"List\">\n" +
-    "    <div class=\"row-fluid search-results\" >\n" +
-    "      <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
-    "        <div class=\"span1\">\n" +
-    "          <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
-    "        </div>\n" +
-    "        <div class=\"span11\">\n" +
-    "          <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h3>\n" +
-    "            <span class=\"property\"> User Rating : </span>\n" +
-    "            <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title.) \n" +
-    "         </div>\n" +
-    "      </div>\n" +
+    "<div class=\"row-fluid search-results\" ng-hide=\"loaded\">\n" +
+    "  Loading..\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"loaded\">\n" +
+    "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "    <div class=\"span1\">\n" +
+    "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
     "    </div>\n" +
-    "  </tab>\n" +
-    "  <tab heading=\"Grid\">\n" +
-    "  </tab>\n" +
-    "</tabset>");
+    "    <div class=\"span8\">\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h3>\n" +
+    "        <span class=\"property\"> User Rating : </span>\n" +
+    "        <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating>\n" +
+    "     </div>\n" +
+    "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
+    "        <div class=\"rating\">\n" +
+    "          {{movie.vote_average}} <i class=\"icon-star\"></i>\n" +
+    "        </div>\n" +
+    "        <div class=\"rating-by\">\n" +
+    "          {{movie.vote_count}} users\n" +
+    "        </div>\n" +
+    "     </div>\n" +
+    "  </div>\n" +
+    "</div>");
 }]);
 
 angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templateCache) {
