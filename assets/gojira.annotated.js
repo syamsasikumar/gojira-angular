@@ -66,8 +66,8 @@
       };
       $scope.fetch = function () {
         $scope.imgUrl = $scope.conf.image.baseUrl;
-        var url = $scope.conf.url + '?movie=' + $scope.id;
-        $http.post(url, {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
+        var url = $scope.conf.url.movies + '/' + $scope.id;
+        $http.get(url, {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
           $scope.status = status;
           $scope.movie = data;
         }).error(function (data, status) {
@@ -76,7 +76,7 @@
         });
       };
       if (!$scope.conf.isSet) {
-        $http.post($scope.conf.url + '?conf=1', {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
+        $http.get($scope.conf.url.movies + '/conf', {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
           $scope.conf.image.baseUrl = data.images.base_url;
           ApiConfigService.setConf($scope.conf);
           $scope.fetch();
@@ -125,7 +125,7 @@
       $scope.conf = ApiConfigService.getConf();
       $scope.auto = function () {
         if (!$scope.conf.isSet) {
-          $http.post($scope.conf.url + '?conf=1', {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
+          $http.get($scope.conf.url.movies + '/conf', {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
             $scope.conf.image.baseUrl = data.images.base_url;
             ApiConfigService.setConf($scope.conf);
             $scope.fetch();
@@ -138,11 +138,11 @@
       $scope.fetch = function () {
         $scope.imgUrl = $scope.conf.image.baseUrl;
         if ($scope.search == '') {
-          var url = $scope.conf.url + '?popular=1';
+          var url = $scope.conf.url.movies + '/popular';
         } else {
-          var url = $scope.conf.url + '?q=' + $scope.search;
+          var url = $scope.conf.url.movies + '/search?q=' + $scope.search;
         }
-        $http.post(url, {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
+        $http.get(url, {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
           $scope.status = status;
           $scope.movies = data.results;
           if ($scope.search == '') {
@@ -196,7 +196,7 @@
     '$http',
     function ($http) {
       var conf = {
-          url: 'http://daimajin.herokuapp.com/',
+          url: { movies: 'http://daimajin.herokuapp.com/movies' },
           image: { baseUrl: '' },
           isSet: false
         };
