@@ -25,11 +25,12 @@ angular.module( 'gojira.movie', [
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
       success(function(data, status) {
+        console.log('here');
         $scope.castMarkup[id] = 
         '<h5>' + name + '</h5>' 
         + '<div class="row-fluid"><div class="span4"><img src="' + imgPath + '" ></img></div><div class="span8">'
-        + '<div class="row-fluid"><span class="property">Birthday : </span>' + data.birthday + '</div>'
-        + '<div class="row-fluid"><span class="property">Place of birth : </span>' + data.place_of_birth + '</div>'
+        + '<div class="row-fluid cast-bd"><span class="property">Birthday : </span>' + data.birthday + '</div>'
+        + '<div class="row-fluid cast-bd"><span class="property">Place of birth : </span>' + data.place_of_birth + '</div>'
         + '</div></div>'
         + '<h6>Bio :</h6>'
         + '<div class="row-fluid">' + data.biography + '</div>';
