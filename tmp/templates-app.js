@@ -43,11 +43,11 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
     "        </div>\n" +
     "        <div class=\"cast-result row-fluid left-padded-content\" ng-repeat=\"(index,cast) in movie.casts.cast\">\n" +
     "          <div class=\"span1\" ng-show=\"index < 10 || showAllCast\">\n" +
-    "            <img ng-src=\"{{imgUrl}}/w92/{{cast.profile_path}}\" ng-if=\"cast.profile_path\" ng-show=\"cast.profile_path\"></img>\n" +
+    "            <img ng-src=\"{{imgUrl}}/w92/{{cast.profile_path}}\" ng-if=\"cast.profile_path\" ng-show=\"cast.profile_path\" class=\"list-img\"></img>\n" +
     "            <i class=\"icon-question-sign\" ng-show=\"!cast.profile_path\"></i>\n" +
     "          </div>\n" +
-    "          <div class=\"span11\" ng-show=\"index < 10 || showAllCast\">\n" +
-    "            {{cast.name}} <i ng-show=\"cast.character\">( {{cast.character}} )</i>\n" +
+    "          <div class=\"span11 cast-name\" ng-show=\"index < 10 || showAllCast\">\n" +
+    "            <a><span tooltip-placement=\"right\"  tooltip-html-unsafe=\"{{castMarkup[cast.id]}}\" tooltip-trigger=\"mouseenter\" class=\"cast-desc\">{{cast.name}} <i ng-show=\"cast.character\">( {{cast.character}} )</i></span></a>\n" +
     "          </div>\n" +
     "        </div>\n" +
     "      </div>\n" +
