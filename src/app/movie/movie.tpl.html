@@ -34,11 +34,11 @@
         </div>
         <div class="cast-result row-fluid left-padded-content" ng-repeat="(index,cast) in movie.casts.cast">
           <div class="span1" ng-show="index < 10 || showAllCast">
-            <img ng-src="{{imgUrl}}/w92/{{cast.profile_path}}" ng-if="cast.profile_path" ng-show="cast.profile_path"></img>
+            <img ng-src="{{imgUrl}}/w92/{{cast.profile_path}}" ng-if="cast.profile_path" ng-show="cast.profile_path" class="list-img"></img>
             <i class="icon-question-sign" ng-show="!cast.profile_path"></i>
           </div>
-          <div class="span11" ng-show="index < 10 || showAllCast">
-            {{cast.name}} <i ng-show="cast.character">( {{cast.character}} )</i>
+          <div class="span11 cast-name" ng-show="index < 10 || showAllCast">
+            <a><span tooltip-placement="right"  tooltip-html-unsafe="{{castMarkup[cast.id]}}" tooltip-trigger="mouseenter" class="cast-desc">{{cast.name}} <i ng-show="cast.character">( {{cast.character}} )</i></span></a>
           </div>
         </div>
       </div>

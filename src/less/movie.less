@@ -5,12 +5,32 @@
   padding:10px;
 }
 
+
 .cast-result{
   padding-top: 2px;
   margin:2px 0px;
-  img{
+  .list-img{
     height:35px;
     margin:0 auto;
+  }
+  .cast-name{
+    padding-top:5px;
+  }
+  .tooltip-inner{
+    text-align:left;
+    max-width:400px;
+    opacity:0.98;
+    .poster{
+      height:40px;
+    }
+    .movie-name{
+      padding-top:5px;
+    }
+  }
+  .tooltip{
+    line-height: 1.4;
+    .opacity(0);
+    &.in     { .opacity(98); }
   }
 }
 
