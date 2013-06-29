@@ -71,6 +71,7 @@ a {
   &:hover{
     color: @orange;
     text-decoration:none;
+    text-shadow: @text-shadow 0 0 1px;
   }
 }
 
@@ -99,7 +100,7 @@ input{
 }
 
 .rating{
-  color:@user-back;  
+  color:@yellow;  
 }
 
 .nav-bar {
@@ -147,8 +148,41 @@ input{
   font-weight:bold;
   &:hover{
     text-decoration:none;
-    color:@user-back;
+    color:@yellow;
   }
+}
+
+.rating-box{
+  min-width:100px;
+  margin:10px;
+  font-weight:bold;
+  text-align:center;
+  .rating{
+    font-size:30px;
+    padding:10px;
+    color:@white;
+    .icon-star{
+      font-size:20px;
+      color:@yellow;
+    }
+  }
+  .rating-by{
+    font-size:15px;
+    margin:0 auto;
+    padding:10px;
+    color:@white;
+    border-top:1px solid @white;
+  }
+}
+
+.low{
+  background-color:@red-low;
+}
+.med{
+  background-color:@orange-med;
+}
+.high{
+  background-color:@green-high;
 }
 
 footer{

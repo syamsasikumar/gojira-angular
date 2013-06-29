@@ -1,6 +1,7 @@
 angular.module( 'gojira.search', [
   'ui.bootstrap',
-  'Conf'
+  'Conf',
+  'Util'
 ])
 
 .config(function config( $routeProvider ) {
@@ -10,9 +11,13 @@ angular.module( 'gojira.search', [
   });
 })
 
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $http, ApiConfigService ) {
-	$scope.search = '';
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $http, ApiConfigService, UtilityService ) {
+  $scope.search = '';
+  $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
+  $scope.getRatingClass = function(rating){
+    return UtilityService.getRatingClass(rating);
+  }
   $scope.auto = function(){
     if(!$scope.conf.isSet){
       $http.get($scope.conf.url.movies + '/conf', {}, {
@@ -31,6 +36,7 @@ angular.module( 'gojira.search', [
     }
   };
   $scope.fetch = function() {
+    $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
     if($scope.search == ''){
       var url = $scope.conf.url.movies + '/popular';
@@ -41,6 +47,7 @@ angular.module( 'gojira.search', [
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
       success(function(data, status) {
+        $scope.loaded = true;
         $scope.status = status;
         $scope.movies = data.results;
         if($scope.search == ''){

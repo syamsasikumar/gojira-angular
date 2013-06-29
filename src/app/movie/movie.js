@@ -1,7 +1,8 @@
 angular.module( 'gojira.movie', [
   'ui.bootstrap',
   'Conf',
-  'Auth'
+  'Auth',
+  'Util'
 ])
 
 .config(function config( $routeProvider ) {
@@ -11,12 +12,15 @@ angular.module( 'gojira.movie', [
   });
 })
 
-.controller( 'MovieCtrl', function MovieCtrl( $scope, $http, $routeParams, ApiConfigService ) {
+.controller( 'MovieCtrl', function MovieCtrl( $scope, $http, $routeParams, ApiConfigService, UtilityService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;
   $scope.castMarkup = [];
-  
+  $scope.loaded = false;
+  $scope.getRatingClass = function(rating){
+    return UtilityService.getRatingClass(rating);
+  }
   $scope.getPerson =function(id, name, img){
     var imgPath = $scope.imgUrl + '/w92/' + img;
     if($scope.castMarkup[id] == undefined){
@@ -25,7 +29,6 @@ angular.module( 'gojira.movie', [
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
       success(function(data, status) {
-        console.log('here');
         $scope.castMarkup[id] = 
         '<h5>' + name + '</h5>' 
         + '<div class="row-fluid"><div class="span4"><img src="' + imgPath + '" ></img></div><div class="span8">'
@@ -70,6 +73,7 @@ angular.module( 'gojira.movie', [
         $scope.getPerson(cast.id, cast.name, cast.profile_path);
       });
       $scope.movie = data;
+      $scope.loaded = true;
     }).
     error(function(data, status) {
       $scope.data = data || "Request failed";
