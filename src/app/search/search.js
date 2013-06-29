@@ -15,7 +15,7 @@ angular.module( 'gojira.search', [
   $scope.conf = ApiConfigService.getConf();
   $scope.auto = function(){
     if(!$scope.conf.isSet){
-      $http.post($scope.conf.url + '?conf=1', {}, {
+      $http.post($scope.conf.url.movies + '/conf', {}, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         }).
         success(function(data, status) {
@@ -33,9 +33,9 @@ angular.module( 'gojira.search', [
   $scope.fetch = function() {
     $scope.imgUrl = $scope.conf.image.baseUrl;
     if($scope.search == ''){
-      var url = $scope.conf.url + '?popular=1';
+      var url = $scope.conf.url.movies + '/popular';
     }else{
-      var url = $scope.conf.url + '?q=' + $scope.search;  
+      var url = $scope.conf.url.movies + '/search?q=' + $scope.search;  
     }
     $http.post(url, {}, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
