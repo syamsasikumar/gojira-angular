@@ -237,18 +237,52 @@ angular.module( 'gojira.search', [
 
 ;
 angular.module( 'gojira.user', [
+  'ngCookies',
   'templates-app',
   'templates-component',
   'ui.bootstrap',
-  'Auth'
+  'Auth',
+  'Conf'
 ])
-.controller( 'UserCtrl', function UserCtrl ( $scope, AuthService ) {
+.controller( 'UserCtrl', function UserCtrl ( $scope, AuthService, ApiConfigService, $http,  $cookies ) {
+  $scope.name = "";
+  $scope.pass = "";
+  $scope.rName = "";
+  $scope.rPass = "";
+  $scope.rcPass = "";
   $scope.isCollapsed = true;
-  $scope.login = function(){
-    console.log('Clicked login');
+  $scope.conf = ApiConfigService.getConf();
+  $scope.login = function(name, pass){
+    $http({
+      url:$scope.conf.url.users + '/login?' + 'name=' + name + '&pass=' + pass, 
+      method: 'GET',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    }).
+    success(function(data, status) {
+      if(data.code == 0){
+        $cookies.sid = data._id;
+      }
+    }).
+    error(function(data, status) {
+      console.log(data);
+    });
+    console.log('Clicked login ');
   };
-  $scope.register = function(){
-    console.log('Clicked register');
+  $scope.register = function(name, pass, cpass){
+    $http({
+      url:$scope.conf.url.users + '/register?' + 'name=' + name + '&pass=' + pass + '&cpass=' + cpass, 
+      method: 'GET',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    }).
+    success(function(data, status) {
+      if(data.code == 0){
+        $cookies.sid = data._id;
+      }
+    }).
+    error(function(data, status) {
+      console.log(data);
+    });
+    console.log('clicked register');
   };  
   $scope.toggleUser = function(){
     $scope.isCollapsed = !$scope.isCollapsed;
@@ -265,7 +299,8 @@ angular.module('Conf', [])
 .factory('ApiConfigService', function($http){
   var conf = {
     url:{
-      movies : 'http://daimajin.herokuapp.com/movies'
+      movies : 'http://daimajin.herokuapp.com/movies',
+      users: 'http://localhost:8081/users'
     },
     image:{
       baseUrl:''
@@ -283,6 +318,7 @@ angular.module('Conf', [])
     }
   };
 });
+
 angular.module('Auth', [])
 .factory('AuthService', function(){
   var user;
@@ -450,16 +486,16 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
     "  <div class=\"row-fluid\">\n" +
     "    <div class=\"login-box span4 offset2\">\n" +
     "      <h5>Login</h5>\n" +
-    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\">\n" +
-    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"login()\" >Login</button>\n" +
+    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"name\">\n" +
+    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"pass\">\n" +
+    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"login(name, pass)\" >Login</button>\n" +
     "    </div>\n" +
     "    <div class=\"reg-box span4 \">\n" +
     "      <h5>Register</h5>\n" +
-    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\">\n" +
-    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register()\">Register</button>\n" +
+    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"rName\">\n" +
+    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"rPass\">\n" +
+    "      <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\">\n" +
+    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register(rName, rPass,rcPass)\">Register</button>\n" +
     "    </div>\n" +
     "  </div>\n" +
     "</div>");
@@ -553,5 +589,13 @@ angular.module('ui.route', []).directive('uiRoute', ['$location', '$parse', func
     }
   };
 }]);
+
+/*
+ AngularJS v1.0.7
+ (c) 2010-2012 Google, Inc. http://angularjs.org
+ License: MIT
+*/
+(function(m,f,l){'use strict';f.module("ngCookies",["ng"]).factory("$cookies",["$rootScope","$browser",function(d,b){var c={},g={},h,i=!1,j=f.copy,k=f.isUndefined;b.addPollFn(function(){var a=b.cookies();h!=a&&(h=a,j(a,g),j(a,c),i&&d.$apply())})();i=!0;d.$watch(function(){var a,e,d;for(a in g)k(c[a])&&b.cookies(a,l);for(a in c)e=c[a],f.isString(e)?e!==g[a]&&(b.cookies(a,e),d=!0):f.isDefined(g[a])?c[a]=g[a]:delete c[a];if(d)for(a in e=b.cookies(),c)c[a]!==e[a]&&(k(e[a])?delete c[a]:c[a]=e[a])});return c}]).factory("$cookieStore",
+["$cookies",function(d){return{get:function(b){return(b=d[b])?f.fromJson(b):b},put:function(b,c){d[b]=f.toJson(c)},remove:function(b){delete d[b]}}}])})(window,window.angular);
 
 })( window, window.angular );
