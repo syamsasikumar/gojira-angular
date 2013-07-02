@@ -10,16 +10,16 @@
   <div class="row-fluid">
     <div class="login-box span4 offset2">
       <h5>Login</h5>
-      <input type="text" class="span8" placeholder="Username">
-      <input type="password" class="span8" placeholder="Password">
-      <button class="btn span8 btn-warning" type="button" ng-click="login()" >Login</button>
+      <input type="text" class="span8" placeholder="Username" ng-model="name">
+      <input type="password" class="span8" placeholder="Password" ng-model="pass">
+      <button class="btn span8 btn-warning" type="button" ng-click="login(name, pass)" >Login</button>
     </div>
     <div class="reg-box span4 ">
       <h5>Register</h5>
-      <input type="text" class="span8" placeholder="Username">
-      <input type="password" class="span8" placeholder="Password">
-      <input type="password" class="span8" placeholder="Confirm password">
-      <button class="btn span8 btn-warning" type="button" ng-click="register()">Register</button>
+      <input type="text" class="span8" placeholder="Username" ng-model="rName">
+      <input type="password" class="span8" placeholder="Password" ng-model="rPass">
+      <input type="password" class="span8" placeholder="Confirm password" ng-model="rcPass">
+      <button class="btn span8 btn-warning" type="button" ng-click="register(rName, rPass,rcPass)">Register</button>
     </div>
   </div>
 </div>

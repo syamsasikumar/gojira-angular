@@ -2,7 +2,8 @@ angular.module('Conf', [])
 .factory('ApiConfigService', function($http){
   var conf = {
     url:{
-      movies : 'http://daimajin.herokuapp.com/movies'
+      movies : 'http://daimajin.herokuapp.com/movies',
+      users: 'http://localhost:8081/users'
     },
     image:{
       baseUrl:''
