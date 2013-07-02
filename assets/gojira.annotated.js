@@ -271,7 +271,7 @@
       var conf = {
           url: {
             movies: 'http://daimajin.herokuapp.com/movies',
-            users: 'http://localhost:8081/users'
+            users: 'http://daimajin.herokuapp.com/users'
           },
           image: { baseUrl: '' },
           isSet: false
