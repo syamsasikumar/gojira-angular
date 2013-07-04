@@ -1,5 +1,5 @@
-<div class="row-fluid search-input">
-  <input type="text" class="span9 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>
+<div class="row-fluid search-input" data-ng-init="auto()">
+  <input type="text" class="span10 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>
 </div>
 <h3>{{listTitle}}</h3>
 <div class="row-fluid search-results" ng-hide="loaded">

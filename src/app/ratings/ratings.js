@@ -1,6 +1,7 @@
 angular.module( 'gojira.ratings', [
   'placeholders',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'Alerts'
 ])
 
 .config(function config( $routeProvider ) {
@@ -9,9 +10,19 @@ angular.module( 'gojira.ratings', [
     templateUrl: 'ratings/ratings.tpl.html'
   });
 })
-
-.controller( 'RatingsCtrl', function RatingsCtrl( $scope ) {
-  $scope.message = "on ratings page";
+/**
+* Controller for my ratings page
+*/
+.controller( 'RatingsCtrl', function RatingsCtrl( $scope, $rootScope, AlertsService, $location ) {
+  /**
+  * Redirect if not logged in
+  */
+  $scope.init = function(){
+    if(!$rootScope.user){
+      AlertsService.setAlert('error', 'You should be logged in to access your ratings page');
+      $location.path('/');
+    }
+  };
 })
 
 ;

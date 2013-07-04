@@ -1,7 +1,8 @@
 angular.module( 'gojira.search', [
   'ui.bootstrap',
   'Conf',
-  'Util'
+  'Util',
+  'Alerts'
 ])
 
 .config(function config( $routeProvider ) {
@@ -10,16 +11,27 @@ angular.module( 'gojira.search', [
     templateUrl: 'search/search.tpl.html'
   });
 })
-
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $http, ApiConfigService, UtilityService ) {
+/**
+* Controller for search page
+*/
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, UtilityService, AlertsService ) {
   $scope.search = '';
   $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
+  /**
+  * Calls utility method to get rating style
+  */
   $scope.getRatingClass = function(rating){
     return UtilityService.getRatingClass(rating);
   }
+  /**
+  * Called on page load
+  */
   $scope.auto = function(){
     if(!$scope.conf.isSet){
+      if(!$rootScope.user){
+        AlertsService.setAlert('info', 'Login to rate / review movies');
+      }
       $http.get($scope.conf.url.movies + '/conf', {}, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         }).
@@ -35,6 +47,9 @@ angular.module( 'gojira.search', [
       $scope.fetch();
     }
   };
+  /**
+  * Gets the list for search - most popular by default
+  */
   $scope.fetch = function() {
     $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
@@ -67,7 +82,6 @@ angular.module( 'gojira.search', [
         $scope.status = status;
     });
   };
-  $scope.auto();
 })
 
 ;

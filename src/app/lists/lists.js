@@ -9,9 +9,19 @@ angular.module( 'gojira.lists', [
     templateUrl: 'lists/lists.tpl.html'
   });
 })
-
-.controller( 'ListsCtrl', function ListsCtrl( $scope ) {
-  $scope.message = "on lists page";
+/**
+* Controller for my lists page
+*/
+.controller( 'ListsCtrl', function ListsCtrl( $scope, $rootScope, AlertsService, $location ) {
+  $scope.init = function(){
+    /**
+    * Redirect if not logged in
+    */
+    if(!$rootScope.user){
+      AlertsService.setAlert('error', 'You should be logged in to access your lists page');
+      $location.path('/');
+    }
+  };
 })
 
 ;

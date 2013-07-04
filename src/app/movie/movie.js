@@ -2,7 +2,8 @@ angular.module( 'gojira.movie', [
   'ui.bootstrap',
   'Conf',
   'Auth',
-  'Util'
+  'Util',
+  'Alerts'
 ])
 
 .config(function config( $routeProvider ) {
@@ -11,16 +12,22 @@ angular.module( 'gojira.movie', [
     templateUrl: 'movie/movie.tpl.html'
   });
 })
-
-.controller( 'MovieCtrl', function MovieCtrl( $scope, $http, $routeParams, ApiConfigService, UtilityService ) {
+/**
+* Controller for movie detail page
+*/
+.controller( 'MovieCtrl', function MovieCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, UtilityService, AlertsService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;
   $scope.castMarkup = [];
   $scope.loaded = false;
+  
   $scope.getRatingClass = function(rating){
     return UtilityService.getRatingClass(rating);
   }
+  /**
+  * Gets cast info
+  */
   $scope.getPerson =function(id, name, img){
     var imgPath = $scope.imgUrl + '/w92/' + img;
     if($scope.castMarkup[id] == undefined){
@@ -54,16 +61,20 @@ angular.module( 'gojira.movie', [
       });
     }
   };
-
+  /**
+  * sets background image to class
+  */
   $scope.getBackground = function(url, path){
     return {
       background:'url( \'' + url + '/original/' + path + '\')'
     };
   };
-
+  /**
+  * gets movie data based on id
+  */
   $scope.fetch = function(){
     $scope.imgUrl = $scope.conf.image.baseUrl;
-    var url = $scope.conf.url.movies + '/' + $scope.id;  
+    var url = $scope.conf.url.movies + '/' + $scope.id;
     $http.get(url, {}, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
     }).
@@ -73,6 +84,9 @@ angular.module( 'gojira.movie', [
         $scope.getPerson(cast.id, cast.name, cast.profile_path);
       });
       $scope.movie = data;
+      if(!$rootScope.user){
+        AlertsService.setAlert('info', 'Login to rate & review "' + data.title + '"');
+      }
       $scope.loaded = true;
     }).
     error(function(data, status) {
@@ -80,20 +94,24 @@ angular.module( 'gojira.movie', [
       $scope.status = status;
     });
   };
-
-  if(!$scope.conf.isSet){
-    $http.get($scope.conf.url.movies + '/conf', {}, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-      }).
-      success(function(data, status) {
-        $scope.conf.image.baseUrl = data.images.base_url;
-        ApiConfigService.setConf($scope.conf);
-        $scope.fetch();
-      }).
-      error(function(data, status) {
-          
-      });
-  }else{
-    $scope.fetch();
+  /**
+  * To be called on page load
+  */
+  $scope.init = function(){
+    if(!$scope.conf.isSet){
+      $http.get($scope.conf.url.movies + '/conf', {}, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        }).
+        success(function(data, status) {
+          $scope.conf.image.baseUrl = data.images.base_url;
+          ApiConfigService.setConf($scope.conf);
+          $scope.fetch();
+        }).
+        error(function(data, status) {
+            
+        });
+    }else{
+      $scope.fetch();
+    }
   }
 });
