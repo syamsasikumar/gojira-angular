@@ -2,12 +2,14 @@ angular.module('templates-app', ['lists/lists.tpl.html', 'movie/movie.tpl.html',
 
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/lists.tpl.html",
-    "{{message}}");
+    "<div class=\"row-fluid\" data-ng-init=\"init()\">\n" +
+    "  Lists\n" +
+    "</div>");
 }]);
 
 angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("movie/movie.tpl.html",
-    "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\">\n" +
+    "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\" data-ng-init=\"init()\">\n" +
     "  <div class=\"row-fluid\" ng-hide=\"loaded\">\n" +
     "    Loading..\n" +
     "  </div>\n" +
@@ -84,13 +86,16 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
 
 angular.module("ratings/ratings.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("ratings/ratings.tpl.html",
-    "{{message}}");
+    "<div class=\"row-fluid\" data-ng-init=\"init()\">\n" +
+    "  Ratings\n" +
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("search/search.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("search/search.tpl.html",
-    "<div class=\"row-fluid search-input\">\n" +
-    "  <input type=\"text\" class=\"span9 offset1\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"auto()\"/>\n" +
+    "<div class=\"row-fluid search-input\" data-ng-init=\"auto()\">\n" +
+    "  <input type=\"text\" class=\"span10 offset1\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"auto()\"/>\n" +
     "</div>\n" +
     "<h3>{{listTitle}}</h3>\n" +
     "<div class=\"row-fluid search-results\" ng-hide=\"loaded\">\n" +
@@ -149,5 +154,5 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
 
 angular.module("user/user.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("user/user.tpl.html",
-    "Logged In user");
+    "&nbsp;");
 }]);

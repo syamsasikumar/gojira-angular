@@ -14,18 +14,24 @@
     <script type="text/javascript" src="assets/libs.js"></script>
 
     <!-- this is your compiled, minified application code -->
-    <script type="text/javascript" src="assets/gojira.js"></script>
+    <script type="text/javascript" src="assets/gojira.min.js"></script>
   </head>
   <body>
     <div class="container-fluid main-container">
-      <div class="nav-bar">
+      <div class="nav-bar" ng-controller="AppCtrl" data-ng-init="init()">
         <ul class="top-nav">
+          <li ui-route="/user/{{user._id}}" ng-if="isLoggedIn">
+            <a href="#/user/{{user._id}}" ng-class="{active:$uiRoute}">
+              <i class="icon-user"></i>
+              {{user.name}}
+            </a>
+          </li>
           <li ui-route="/search">
             <a href="#/search" ng-class="{active:$uiRoute}">
               <i class="icon-search"></i>
               Search
             </a>
-          </li>            
+          </li>
           <li ui-route="/ratings">
             <a href="#/ratings" ng-class="{active:$uiRoute}">
               <i class="icon-thumbs-up"></i>
@@ -38,18 +44,19 @@
               My Lists
             </a>
           </li>
-        </ul>        
+        </ul>
+        <alert type="alert.type" ng-if="showAlert"><i class="{{alert.icon}}" ></i> {{alert.msg}} </alert>
       </div>
-      <div class="user-feed row-fluid" ng-controller="UserCtrl" >
-          <a class="login-btn" ng-click="toggleUser()">
-            <i class="icon-unlock"></i>
-            Login / Register
-          </a> 
-          <div ng-include src="userContent" class="user-box" collapse="isCollapsed">
+      <div class="user-feed row-fluid" ng-controller="AuthCtrl" data-ng-init="init()" >
+          <a class="login-btn" ng-click="toggleUser()" >
+            <i class="{{userIcon}}"></i>
+            {{userText}}
+          </a>
+          <div ng-include src="userContent" class="user-box" ng-hide="isCollapsed">
           </div>
       </div>
       <div class="row-fluid">
-        <div class="span12 left-pane" ng-controller="AppCtrl">        
+        <div class="span12 left-pane" ng-controller="AppCtrl">
           <div class="content" ng-view>
           </div>
         </div>

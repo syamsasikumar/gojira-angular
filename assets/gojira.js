@@ -22,10 +22,34 @@ angular.module( 'gojira', [
 .config( function myAppConfig ( $routeProvider ) {
   $routeProvider.otherwise({ redirectTo: '/search' });
 })
-
-
-.controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
-  $scope.content="Test";
+/**
+* Root controller
+* Observes for alerts
+*/
+.controller( 'AppCtrl', function AppCtrl ( $scope, $location, $rootScope ) {
+  $scope.isLoggedIn = false;
+  $scope.showAlert = false;
+  /**
+  * called on page load
+  */
+  $scope.init = function(){
+    $scope.$watch( function(){ return $rootScope.user }, function(user){
+      $scope.user =  user;
+      if(user){
+        $scope.isLoggedIn = true;
+      }else{
+        $scope.isLoggedIn = false;
+      }
+    }, true);
+    $scope.$watch( function(){ return $rootScope.alert }, function(alert){
+      if(alert){
+        $scope.showAlert = true;
+      }else{
+        $scope.showAlert = false;
+      }
+      $scope.alert = alert;
+    }, true);
+  }
 })
 ;
 
@@ -41,9 +65,19 @@ angular.module( 'gojira.lists', [
     templateUrl: 'lists/lists.tpl.html'
   });
 })
-
-.controller( 'ListsCtrl', function ListsCtrl( $scope ) {
-  $scope.message = "on lists page";
+/**
+* Controller for my lists page
+*/
+.controller( 'ListsCtrl', function ListsCtrl( $scope, $rootScope, AlertsService, $location ) {
+  $scope.init = function(){
+    /**
+    * Redirect if not logged in
+    */
+    if(!$rootScope.user){
+      AlertsService.setAlert('error', 'You should be logged in to access your lists page');
+      $location.path('/');
+    }
+  };
 })
 
 ;
@@ -51,7 +85,8 @@ angular.module( 'gojira.movie', [
   'ui.bootstrap',
   'Conf',
   'Auth',
-  'Util'
+  'Util',
+  'Alerts'
 ])
 
 .config(function config( $routeProvider ) {
@@ -60,16 +95,22 @@ angular.module( 'gojira.movie', [
     templateUrl: 'movie/movie.tpl.html'
   });
 })
-
-.controller( 'MovieCtrl', function MovieCtrl( $scope, $http, $routeParams, ApiConfigService, UtilityService ) {
+/**
+* Controller for movie detail page
+*/
+.controller( 'MovieCtrl', function MovieCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, UtilityService, AlertsService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;
   $scope.castMarkup = [];
   $scope.loaded = false;
+  
   $scope.getRatingClass = function(rating){
     return UtilityService.getRatingClass(rating);
   }
+  /**
+  * Gets cast info
+  */
   $scope.getPerson =function(id, name, img){
     var imgPath = $scope.imgUrl + '/w92/' + img;
     if($scope.castMarkup[id] == undefined){
@@ -103,16 +144,20 @@ angular.module( 'gojira.movie', [
       });
     }
   };
-
+  /**
+  * sets background image to class
+  */
   $scope.getBackground = function(url, path){
     return {
       background:'url( \'' + url + '/original/' + path + '\')'
     };
   };
-
+  /**
+  * gets movie data based on id
+  */
   $scope.fetch = function(){
     $scope.imgUrl = $scope.conf.image.baseUrl;
-    var url = $scope.conf.url.movies + '/' + $scope.id;  
+    var url = $scope.conf.url.movies + '/' + $scope.id;
     $http.get(url, {}, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
     }).
@@ -122,6 +167,9 @@ angular.module( 'gojira.movie', [
         $scope.getPerson(cast.id, cast.name, cast.profile_path);
       });
       $scope.movie = data;
+      if(!$rootScope.user){
+        AlertsService.setAlert('info', 'Login to rate & review "' + data.title + '"');
+      }
       $scope.loaded = true;
     }).
     error(function(data, status) {
@@ -129,61 +177,10 @@ angular.module( 'gojira.movie', [
       $scope.status = status;
     });
   };
-
-  if(!$scope.conf.isSet){
-    $http.get($scope.conf.url.movies + '/conf', {}, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-      }).
-      success(function(data, status) {
-        $scope.conf.image.baseUrl = data.images.base_url;
-        ApiConfigService.setConf($scope.conf);
-        $scope.fetch();
-      }).
-      error(function(data, status) {
-          
-      });
-  }else{
-    $scope.fetch();
-  }
-});
-angular.module( 'gojira.ratings', [
-  'placeholders',
-  'ui.bootstrap'
-])
-
-.config(function config( $routeProvider ) {
-  $routeProvider.when( '/ratings', {
-    controller: 'RatingsCtrl',
-    templateUrl: 'ratings/ratings.tpl.html'
-  });
-})
-
-.controller( 'RatingsCtrl', function RatingsCtrl( $scope ) {
-  $scope.message = "on ratings page";
-})
-
-;
-angular.module( 'gojira.search', [
-  'ui.bootstrap',
-  'Conf',
-  'Util'
-])
-
-.config(function config( $routeProvider ) {
-  $routeProvider.when( '/search', {
-    controller: 'SearchCtrl',
-    templateUrl: 'search/search.tpl.html'
-  });
-})
-
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $http, ApiConfigService, UtilityService ) {
-  $scope.search = '';
-  $scope.loaded = false;
-  $scope.conf = ApiConfigService.getConf();
-  $scope.getRatingClass = function(rating){
-    return UtilityService.getRatingClass(rating);
-  }
-  $scope.auto = function(){
+  /**
+  * To be called on page load
+  */
+  $scope.init = function(){
     if(!$scope.conf.isSet){
       $http.get($scope.conf.url.movies + '/conf', {}, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
@@ -199,7 +196,88 @@ angular.module( 'gojira.search', [
     }else{
       $scope.fetch();
     }
+  }
+});
+angular.module( 'gojira.ratings', [
+  'placeholders',
+  'ui.bootstrap',
+  'Alerts'
+])
+
+.config(function config( $routeProvider ) {
+  $routeProvider.when( '/ratings', {
+    controller: 'RatingsCtrl',
+    templateUrl: 'ratings/ratings.tpl.html'
+  });
+})
+/**
+* Controller for my ratings page
+*/
+.controller( 'RatingsCtrl', function RatingsCtrl( $scope, $rootScope, AlertsService, $location ) {
+  /**
+  * Redirect if not logged in
+  */
+  $scope.init = function(){
+    if(!$rootScope.user){
+      AlertsService.setAlert('error', 'You should be logged in to access your ratings page');
+      $location.path('/');
+    }
   };
+})
+
+;
+angular.module( 'gojira.search', [
+  'ui.bootstrap',
+  'Conf',
+  'Util',
+  'Alerts'
+])
+
+.config(function config( $routeProvider ) {
+  $routeProvider.when( '/search', {
+    controller: 'SearchCtrl',
+    templateUrl: 'search/search.tpl.html'
+  });
+})
+/**
+* Controller for search page
+*/
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, UtilityService, AlertsService ) {
+  $scope.search = '';
+  $scope.loaded = false;
+  $scope.conf = ApiConfigService.getConf();
+  /**
+  * Calls utility method to get rating style
+  */
+  $scope.getRatingClass = function(rating){
+    return UtilityService.getRatingClass(rating);
+  }
+  /**
+  * Called on page load
+  */
+  $scope.auto = function(){
+    if(!$scope.conf.isSet){
+      if(!$rootScope.user){
+        AlertsService.setAlert('info', 'Login to rate / review movies');
+      }
+      $http.get($scope.conf.url.movies + '/conf', {}, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        }).
+        success(function(data, status) {
+          $scope.conf.image.baseUrl = data.images.base_url;
+          ApiConfigService.setConf($scope.conf);
+          $scope.fetch();
+        }).
+        error(function(data, status) {
+            
+        });
+    }else{
+      $scope.fetch();
+    }
+  };
+  /**
+  * Gets the list for search - most popular by default
+  */
   $scope.fetch = function() {
     $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
@@ -232,7 +310,6 @@ angular.module( 'gojira.search', [
         $scope.status = status;
     });
   };
-  $scope.auto();
 })
 
 ;
@@ -242,16 +319,59 @@ angular.module( 'gojira.user', [
   'templates-component',
   'ui.bootstrap',
   'Auth',
-  'Conf'
+  'Conf',
+  'Alerts'
 ])
-.controller( 'UserCtrl', function UserCtrl ( $scope, AuthService, ApiConfigService, $http,  $cookies ) {
-  $scope.name = "";
-  $scope.pass = "";
-  $scope.rName = "";
-  $scope.rPass = "";
-  $scope.rcPass = "";
+
+.config(function config( $routeProvider ) {
+  $routeProvider.when( '/user/:id', {
+    controller: 'UserCtrl',
+    templateUrl: 'user/user.tpl.html'
+  });
+})
+/**
+* authentication controller
+*/
+.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, AuthService, ApiConfigService, $http,  $cookies, AlertsService) {
+  $scope.name = '';
+  $scope.pass = '';
+  $scope.rName = '';
+  $scope.rPass = '';
+  $scope.rcPass = '';
   $scope.isCollapsed = true;
   $scope.conf = ApiConfigService.getConf();
+  /**
+  * init to be called on page load
+  */
+  $scope.init = function(){
+    if(AuthService.getUserCookie() && !AuthService.getUser()){
+      $http({
+        url:$scope.conf.url.users + '/' + cookie, 
+        method: 'GET',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+      }).
+      success(function(data, status) {
+        if(data.code == 0){
+          AuthService.setUser(data);
+          AlertsService.setAlert('info', 'Logged in as ' + data.name);
+        }else{
+          AlertsService.setAlert('error', 'Login failed');
+        }
+      }).
+      error(function(data, status) {
+        AlertsService.setAlert('error', 'Login Failed');
+      });
+    }
+    $scope.$watch( AuthService.isLoggedIn, function(isLoggedIn){
+      $scope.userContent = (isLoggedIn)? 'user/user.tpl.html':'user/anon.tpl.html';
+      $scope.userIcon = (isLoggedIn)? 'icon-signout':'icon-unlock';
+      $scope.userText = (isLoggedIn)? ('Logout ' + AuthService.getUser().name) : 'Login / Register';
+      $rootScope.user = AuthService.getUser();
+    });
+  };
+  /**
+  * login button click
+  */
   $scope.login = function(name, pass){
     $http({
       url:$scope.conf.url.users + '/login?' + 'name=' + name + '&pass=' + pass, 
@@ -260,14 +380,21 @@ angular.module( 'gojira.user', [
     }).
     success(function(data, status) {
       if(data.code == 0){
-        $cookies.sid = data._id;
+        $scope.isCollapsed = true;
+        AlertsService.setAlert('info', 'Login successful ');
+        AuthService.setUser(data);
+      }else{
+        AlertsService.setAlert('error', data.status);
       }
     }).
     error(function(data, status) {
+      AlertsService.setAlert('error', 'Login Failed');
       console.log(data);
     });
-    console.log('Clicked login ');
   };
+  /**
+  * Register button click
+  */
   $scope.register = function(name, pass, cpass){
     $http({
       url:$scope.conf.url.users + '/register?' + 'name=' + name + '&pass=' + pass + '&cpass=' + cpass, 
@@ -276,25 +403,74 @@ angular.module( 'gojira.user', [
     }).
     success(function(data, status) {
       if(data.code == 0){
-        $cookies.sid = data._id;
+        $scope.isCollapsed = true;
+        AuthService.setUser(data);
+        AlertsService.setAlert('info', 'Registration successful ');
+      }else{
+        AlertsService.setAlert('error', data.status);
       }
     }).
     error(function(data, status) {
+      AlertsService.setAlert('error', 'Registration error');
       console.log(data);
     });
-    console.log('clicked register');
   };  
+  /**
+  * Toggle login/ logout UI
+  */
   $scope.toggleUser = function(){
-    $scope.isCollapsed = !$scope.isCollapsed;
-    console.log('here');
-  }
-  $scope.$watch( AuthService.isLoggedIn, function(isLoggedIn){
-    $scope.user = AuthService.getUser();
-    $scope.userContent = (isLoggedIn)? "user/user.tpl.html":"user/anon.tpl.html";
-  });
+    AlertsService.clearAlert();
+    if(!AuthService.isLoggedIn()){
+      $scope.isCollapsed = !$scope.isCollapsed;
+    }else{
+      AuthService.logout();
+      AlertsService.setAlert('info', 'Logout successful ');
+    }
+  };
 })
+/**
+* Controller for user admin
+*/
+.controller( 'UserCtrl', function UserCtrl ( $scope, $rootScope, $routeParams, $location, AlertsService) {
+  if($rootScope.user && $rootScope.user._id == $routeParams.id){
 
+  }else{
+    $location.path('/');
+  }
+});
 ;
+/**
+* handles common alert functionality
+*/
+angular.module('Alerts', [])
+.factory('AlertsService', function($rootScope, $timeout){
+  var toPromise;
+  return {
+    setAlert : function(type, msg){
+      var iconClass = '';
+      if(type == 'error'){
+        iconClass='icon-exclamation-sign';
+      }else if(type == 'info'){
+        iconClass='icon-info-sign';
+      }else if(type == 'success'){
+        iconClass='icon-ok-sign';
+      }
+      $rootScope.alert = {type: type, msg: msg, icon: iconClass};
+      if(toPromise){
+        $timeout.cancel(toPromise);
+      }
+      toPromise = $timeout(function(){
+        $rootScope.alert = undefined;
+      }, 7000);
+    },
+    clearAlert : function(){
+      $rootScope.alert = undefined;
+      if(toPromise){
+        $timeout.cancel(toPromise);
+      }
+    } 
+  };
+});
 angular.module('Conf', [])
 .factory('ApiConfigService', function($http){
   var conf = {
@@ -319,24 +495,73 @@ angular.module('Conf', [])
   };
 });
 
-angular.module('Auth', [])
-.factory('AuthService', function(){
-  var user;
+/**
+* Handles cookie based auth functions
+*/
+angular.module('Auth', ['Storage'])
+.factory('AuthService', function( $cookies, $rootScope, LocalStorageService ){
+  var _user = (LocalStorageService.get('gojiraUser'))?JSON.parse(LocalStorageService.get('gojiraUser')):undefined;
   return {
-    login:function(){
-
+    setUser:function(data){
+      _user = {};
+      _user._id = data._id;
+      _user.name = data.name;
+       $cookies.sid = data._id;
+       LocalStorageService.set('gojiraUser', JSON.stringify(_user));
     },
     logout:function(){
-
+      delete $cookies.sid;
+      _user = undefined;
+      LocalStorageService.remove('gojiraUser');
     },
     isLoggedIn:function(){
+      if($cookies.sid && _user){
+        return true;
+      }
       return false;
     },
     getUser:function(){
-      return user;
+      return _user;
+    },
+    getUserCookie:function(){
+      return ($cookies.sid)? $cookies.sid: false;
     }
   }
 });
+/**
+* Localstorage factory to handle data storage on browser
+*/
+angular.module('Storage', [])
+.factory('LocalStorageService', function(){
+  var store = (function(){
+    try {
+      if( 'localStorage' in window && window['localStorage'] !== null){
+        return window['localStorage'];
+      }else{
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  })();
+
+  return {
+    get : function(key){
+      return (store)? store.getItem(key):undefined;
+    },
+    set : function(key, val){
+      if(store){
+        store.setItem(key, val);
+      }
+    },
+    remove: function(key){
+      if(store){
+        store.removeItem(key);
+      }
+    }
+  };
+});
+
 angular.module('Util', [])
 .factory('UtilityService', function(){
 
@@ -356,12 +581,14 @@ angular.module('templates-app', ['lists/lists.tpl.html', 'movie/movie.tpl.html',
 
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/lists.tpl.html",
-    "{{message}}");
+    "<div class=\"row-fluid\" data-ng-init=\"init()\">\n" +
+    "  Lists\n" +
+    "</div>");
 }]);
 
 angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("movie/movie.tpl.html",
-    "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\">\n" +
+    "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\" data-ng-init=\"init()\">\n" +
     "  <div class=\"row-fluid\" ng-hide=\"loaded\">\n" +
     "    Loading..\n" +
     "  </div>\n" +
@@ -438,13 +665,16 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
 
 angular.module("ratings/ratings.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("ratings/ratings.tpl.html",
-    "{{message}}");
+    "<div class=\"row-fluid\" data-ng-init=\"init()\">\n" +
+    "  Ratings\n" +
+    "</div>\n" +
+    "");
 }]);
 
 angular.module("search/search.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("search/search.tpl.html",
-    "<div class=\"row-fluid search-input\">\n" +
-    "  <input type=\"text\" class=\"span9 offset1\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"auto()\"/>\n" +
+    "<div class=\"row-fluid search-input\" data-ng-init=\"auto()\">\n" +
+    "  <input type=\"text\" class=\"span10 offset1\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"auto()\"/>\n" +
     "</div>\n" +
     "<h3>{{listTitle}}</h3>\n" +
     "<div class=\"row-fluid search-results\" ng-hide=\"loaded\">\n" +
@@ -503,7 +733,7 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
 
 angular.module("user/user.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("user/user.tpl.html",
-    "Logged In user");
+    "&nbsp;");
 }]);
 
 angular.module('templates-component', []);
