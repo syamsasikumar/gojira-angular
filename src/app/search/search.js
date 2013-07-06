@@ -2,7 +2,8 @@ angular.module( 'gojira.search', [
   'ui.bootstrap',
   'Conf',
   'Util',
-  'Alerts'
+  'Alerts',
+  'Auth'
 ])
 
 .config(function config( $routeProvider ) {
@@ -14,10 +15,27 @@ angular.module( 'gojira.search', [
 /**
 * Controller for search page
 */
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, UtilityService, AlertsService ) {
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, UtilityService, AlertsService, AuthService ) {
   $scope.search = '';
   $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
+  /**
+  * If no rating available sets to 0
+  */
+  $scope.setDefaultRatings = function(id){
+    if(!$scope.userTemp.ratings[id]){
+      $scope.userTemp.ratings[id] = 0;
+    }
+  }
+    /**
+  * Sets ratings
+  */
+  $scope.setRating = function(id){
+    if(!$rootScope.user.ratings[id] || ($rootScope.user.ratings[id] != $scope.userTemp.ratings[id])){
+      $rootScope.user.ratings[id] = $scope.userTemp.ratings[id];
+      AuthService.setUser($rootScope.user);
+    }
+  }
   /**
   * Calls utility method to get rating style
   */
@@ -46,6 +64,14 @@ angular.module( 'gojira.search', [
     }else{
       $scope.fetch();
     }
+    $scope.$watch( function(){ return $rootScope.user }, function(user){
+      $scope.userTemp =  user;
+      if(user){
+        $scope.isLoggedIn = true;
+      }else{
+        $scope.isLoggedIn = false;
+      }
+    }, true);
   };
   /**
   * Gets the list for search - most popular by default

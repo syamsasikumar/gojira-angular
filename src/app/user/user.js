@@ -14,6 +14,7 @@ angular.module( 'gojira.user', [
     templateUrl: 'user/user.tpl.html'
   });
 })
+
 /**
 * authentication controller
 */
@@ -31,7 +32,7 @@ angular.module( 'gojira.user', [
   $scope.init = function(){
     if(AuthService.getUserCookie() && !AuthService.getUser()){
       $http({
-        url:$scope.conf.url.users + '/' + cookie, 
+        url:$scope.conf.url.users + '/' + AuthService.getUserCookie(), 
         method: 'GET',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
@@ -59,15 +60,16 @@ angular.module( 'gojira.user', [
   */
   $scope.login = function(name, pass){
     $http({
-      url:$scope.conf.url.users + '/login?' + 'name=' + name + '&pass=' + pass, 
-      method: 'GET',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+      url:$scope.conf.url.users + '/login', 
+      method: 'POST',
+      data: {name: name, pass:pass},
+      headers: { 'Content-Type': 'application/json; charset=UTF-8'}
     }).
-    success(function(data, status) {
-      if(data.code == 0){
+    success(function(userData, status) {
+      if(userData.code == 0){
         $scope.isCollapsed = true;
+        AuthService.setUser(userData);
         AlertsService.setAlert('info', 'Login successful ');
-        AuthService.setUser(data);
       }else{
         AlertsService.setAlert('error', data.status);
       }
@@ -82,9 +84,10 @@ angular.module( 'gojira.user', [
   */
   $scope.register = function(name, pass, cpass){
     $http({
-      url:$scope.conf.url.users + '/register?' + 'name=' + name + '&pass=' + pass + '&cpass=' + cpass, 
-      method: 'GET',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+      url:$scope.conf.url.users + '/register',
+      data:  {name: name, pass: pass, cpass: cpass}, 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8'}
     }).
     success(function(data, status) {
       if(data.code == 0){
@@ -124,3 +127,4 @@ angular.module( 'gojira.user', [
   }
 });
 ;
+
