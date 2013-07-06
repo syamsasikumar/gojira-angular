@@ -23,11 +23,22 @@
         </div>
      </div>
      <div class="pull-right rating-box" ng-class="getRatingClass(movie.vote_average)">
-        <div class="rating">
+        <div class="rating-text">
           {{movie.vote_average}} <i class="icon-star"></i>
         </div>
         <div class="rating-by">
           {{movie.vote_count}} users
+        </div>
+     </div>
+     <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(userTemp.ratings[movie.id])" ng-if="isLoggedIn">
+        <div class="rating-text" ng-if="userTemp.ratings[movie.id] > 0">
+          {{userTemp.ratings[movie.id]}} <i class="icon-star"></i>
+        </div>
+        <div class="rating-text na-text" ng-if="userTemp.ratings[movie.id] == 0">
+          N/A
+        </div>
+        <div class="rating-by">
+          You
         </div>
      </div>
   </div>
