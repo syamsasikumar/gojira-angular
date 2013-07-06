@@ -230,7 +230,8 @@ angular.module( 'gojira.search', [
   'ui.bootstrap',
   'Conf',
   'Util',
-  'Alerts'
+  'Alerts',
+  'Auth'
 ])
 
 .config(function config( $routeProvider ) {
@@ -242,10 +243,27 @@ angular.module( 'gojira.search', [
 /**
 * Controller for search page
 */
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, UtilityService, AlertsService ) {
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, UtilityService, AlertsService, AuthService ) {
   $scope.search = '';
   $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
+  /**
+  * If no rating available sets to 0
+  */
+  $scope.setDefaultRatings = function(id){
+    if(!$scope.userTemp.ratings[id]){
+      $scope.userTemp.ratings[id] = 0;
+    }
+  }
+    /**
+  * Sets ratings
+  */
+  $scope.setRating = function(id){
+    if(!$rootScope.user.ratings[id] || ($rootScope.user.ratings[id] != $scope.userTemp.ratings[id])){
+      $rootScope.user.ratings[id] = $scope.userTemp.ratings[id];
+      AuthService.setUser($rootScope.user);
+    }
+  }
   /**
   * Calls utility method to get rating style
   */
@@ -274,6 +292,14 @@ angular.module( 'gojira.search', [
     }else{
       $scope.fetch();
     }
+    $scope.$watch( function(){ return $rootScope.user }, function(user){
+      $scope.userTemp =  user;
+      if(user){
+        $scope.isLoggedIn = true;
+      }else{
+        $scope.isLoggedIn = false;
+      }
+    }, true);
   };
   /**
   * Gets the list for search - most popular by default
@@ -329,6 +355,7 @@ angular.module( 'gojira.user', [
     templateUrl: 'user/user.tpl.html'
   });
 })
+
 /**
 * authentication controller
 */
@@ -346,7 +373,7 @@ angular.module( 'gojira.user', [
   $scope.init = function(){
     if(AuthService.getUserCookie() && !AuthService.getUser()){
       $http({
-        url:$scope.conf.url.users + '/' + cookie, 
+        url:$scope.conf.url.users + '/' + AuthService.getUserCookie(), 
         method: 'GET',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
@@ -374,15 +401,16 @@ angular.module( 'gojira.user', [
   */
   $scope.login = function(name, pass){
     $http({
-      url:$scope.conf.url.users + '/login?' + 'name=' + name + '&pass=' + pass, 
-      method: 'GET',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+      url:$scope.conf.url.users + '/login', 
+      method: 'POST',
+      data: {name: name, pass:pass},
+      headers: { 'Content-Type': 'application/json; charset=UTF-8'}
     }).
-    success(function(data, status) {
-      if(data.code == 0){
+    success(function(userData, status) {
+      if(userData.code == 0){
         $scope.isCollapsed = true;
+        AuthService.setUser(userData);
         AlertsService.setAlert('info', 'Login successful ');
-        AuthService.setUser(data);
       }else{
         AlertsService.setAlert('error', data.status);
       }
@@ -397,9 +425,10 @@ angular.module( 'gojira.user', [
   */
   $scope.register = function(name, pass, cpass){
     $http({
-      url:$scope.conf.url.users + '/register?' + 'name=' + name + '&pass=' + pass + '&cpass=' + cpass, 
-      method: 'GET',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+      url:$scope.conf.url.users + '/register',
+      data:  {name: name, pass: pass, cpass: cpass}, 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8'}
     }).
     success(function(data, status) {
       if(data.code == 0){
@@ -439,6 +468,8 @@ angular.module( 'gojira.user', [
   }
 });
 ;
+
+
 /**
 * handles common alert functionality
 */
@@ -500,24 +531,30 @@ angular.module('Conf', [])
 */
 angular.module('Auth', ['Storage'])
 .factory('AuthService', function( $cookies, $rootScope, LocalStorageService ){
-  var _user = (LocalStorageService.get('gojiraUser'))?JSON.parse(LocalStorageService.get('gojiraUser')):undefined;
+  var _user = (LocalStorageService.get('gojiraUser') && $cookies.sid)?JSON.parse(LocalStorageService.get('gojiraUser')):undefined;
   return {
     setUser:function(data){
       _user = {};
       _user._id = data._id;
       _user.name = data.name;
+      _user.lists = data.lists;
+      _user.ratings = data.ratings;
        $cookies.sid = data._id;
+       console.log(data);
        LocalStorageService.set('gojiraUser', JSON.stringify(_user));
+       $rootScope.user = _user;
     },
     logout:function(){
       delete $cookies.sid;
       _user = undefined;
       LocalStorageService.remove('gojiraUser');
+      $rootScope.user = _user;
     },
     isLoggedIn:function(){
       if($cookies.sid && _user){
         return true;
       }
+      LocalStorageService.remove('gojiraUser');
       return false;
     },
     getUser:function(){
@@ -686,9 +723,16 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
     "    </div>\n" +
     "    <div class=\"span8\">\n" +
-    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h3>\n" +
-    "        <span class=\"property\"> User Rating : </span>\n" +
-    "        <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating>\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n" +
+    "        <div class=\"row-fluid movie-list-field\">\n" +
+    "          <span class=\"property\"> User Rating : </span>\n" +
+    "          <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating><br/>\n" +
+    "        </div>\n" +
+    "        <div class=\"row-fluid movie-list-field\" ng-if=\"isLoggedIn\" ng-click=\"setRating(movie.id)\">\n" +
+    "          <span class=\"property\" > Your Rating : </span>\n" +
+    "          {{setDefaultRatings(movie.id)}}\n" +
+    "          <rating value=\"userTemp.ratings[movie.id]\" max=\"10\" readonly=\"false\" class=\"rating user-rating\"></rating>\n" +
+    "        </div>\n" +
     "     </div>\n" +
     "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
     "        <div class=\"rating\">\n" +

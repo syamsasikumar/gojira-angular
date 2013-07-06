@@ -107,9 +107,16 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
     "    </div>\n" +
     "    <div class=\"span8\">\n" +
-    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h3>\n" +
-    "        <span class=\"property\"> User Rating : </span>\n" +
-    "        <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating>\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n" +
+    "        <div class=\"row-fluid movie-list-field\">\n" +
+    "          <span class=\"property\"> User Rating : </span>\n" +
+    "          <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating><br/>\n" +
+    "        </div>\n" +
+    "        <div class=\"row-fluid movie-list-field\" ng-if=\"isLoggedIn\" ng-click=\"setRating(movie.id)\">\n" +
+    "          <span class=\"property\" > Your Rating : </span>\n" +
+    "          {{setDefaultRatings(movie.id)}}\n" +
+    "          <rating value=\"userTemp.ratings[movie.id]\" max=\"10\" readonly=\"false\" class=\"rating user-rating\"></rating>\n" +
+    "        </div>\n" +
     "     </div>\n" +
     "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
     "        <div class=\"rating\">\n" +
