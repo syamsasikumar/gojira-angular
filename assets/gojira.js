@@ -647,7 +647,7 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
     "             <span class=\"genre\" ng-repeat=\"(index,genre) in movie.genres\"> {{genre.name}} <span class=\"sep\" ng-show=\"index < (movie.genres.length -1)\"> | </span></span></p>\n" +
     "       </div>\n" +
     "       <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
-    "          <div class=\"rating\">\n" +
+    "          <div class=\"rating-text\">\n" +
     "            {{movie.vote_average}} <i class=\"icon-star\"></i>\n" +
     "          </div>\n" +
     "          <div class=\"rating-by\">\n" +
@@ -735,11 +735,22 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "        </div>\n" +
     "     </div>\n" +
     "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
-    "        <div class=\"rating\">\n" +
+    "        <div class=\"rating-text\">\n" +
     "          {{movie.vote_average}} <i class=\"icon-star\"></i>\n" +
     "        </div>\n" +
     "        <div class=\"rating-by\">\n" +
     "          {{movie.vote_count}} users\n" +
+    "        </div>\n" +
+    "     </div>\n" +
+    "     <div class=\"pull-right rating-box ratings-box-user\" ng-class=\"getRatingClass(userTemp.ratings[movie.id])\" ng-if=\"isLoggedIn\">\n" +
+    "        <div class=\"rating-text\" ng-if=\"userTemp.ratings[movie.id] > 0\">\n" +
+    "          {{userTemp.ratings[movie.id]}} <i class=\"icon-star\"></i>\n" +
+    "        </div>\n" +
+    "        <div class=\"rating-text na-text\" ng-if=\"userTemp.ratings[movie.id] == 0\">\n" +
+    "          N/A\n" +
+    "        </div>\n" +
+    "        <div class=\"rating-by\">\n" +
+    "          You\n" +
     "        </div>\n" +
     "     </div>\n" +
     "  </div>\n" +
