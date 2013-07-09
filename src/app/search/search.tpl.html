@@ -17,7 +17,7 @@
           <span class="property"> User Rating : </span>
           <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating><br/>
         </div>
-        <div class="row-fluid movie-list-field" ng-if="isLoggedIn" ng-click="setRating(movie)">
+        <div class="row-fluid movie-list-field" ng-if="isLoggedIn" ng-click="setRating(movie.id)">
           <span class="property" > Your Rating : </span>
           <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>
         </div>

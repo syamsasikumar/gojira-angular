@@ -28,7 +28,7 @@ angular.module( 'gojira.movie', [
   */
   $scope.setRating = function(){
     var id = $scope.movie.id;
-    RatingService.setRating( id, $scope.conf.url.users , AuthService.getUserCookie(), AuthService.getUserToken(), $scope.movie.user_rating, $scope.movie, function(){
+    RatingService.setRating( id, $scope.conf.url.users , AuthService.getUserCookie(), AuthService.getUserToken(), $scope.movie.user_rating, function(){
       AlertsService.setAlert('success', 'Rating successful ');
       $rootScope.user.ratings[id] = $scope.movie.user_rating;
       AuthService.setUser($rootScope.user, false);

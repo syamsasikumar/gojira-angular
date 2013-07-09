@@ -30,9 +30,9 @@ angular.module( 'gojira.search', [
     /**
   * Sets ratings
   */
-  $scope.setRating = function(movie){
-    var id = movie.id;
-    RatingService.setRating( id, $scope.conf.url.users , AuthService.getUserCookie(), AuthService.getUserToken(), $scope.userRatings[id], movie, function(){
+  $scope.setRating = function(id){
+    var id = id;
+    RatingService.setRating( id, $scope.conf.url.users , AuthService.getUserCookie(), AuthService.getUserToken(), $scope.userRatings[id], function(){
       AlertsService.setAlert('success', 'Rating successful ');
       $rootScope.user.ratings[id] = $scope.userRatings[id];
       AuthService.setUser($rootScope.user, false);

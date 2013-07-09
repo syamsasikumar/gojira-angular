@@ -36,12 +36,12 @@ angular.module('Rating', ['Alerts'])
         return $rootScope.user.ratings[id];
       }
     },
-    setRating : function(mid, url, uid, token, val, movie, callback){
+    setRating : function(mid, url, uid, token, val, callback){
       if(!$rootScope.user.ratings[mid] || ($rootScope.user.ratings[mid] != val)){
         $http({
           url:url + '/ratings', 
           method: 'PUT',
-          data: {uid: uid, token:token, rating:{mid: mid, val: val}, movie:movie},
+          data: {uid: uid, token:token, rating:{mid: mid, val: val}},
           headers: { 'Content-Type': 'application/json; charset=UTF-8'}
         }).
         success(function(ratingData, status) {
