@@ -10,8 +10,9 @@ angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($temp
 angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("movie/movie.tpl.html",
     "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\" data-ng-init=\"init()\">\n" +
-    "  <div class=\"row-fluid\" ng-hide=\"loaded\">\n" +
-    "    Loading..\n" +
+    "  <div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "    <h4> Loading.. </h4>\n" +
+    "    <div class=\"loader-slj\"></div>\n" +
     "  </div>\n" +
     "  <div class=\"movie-container\" ng-show=\"loaded\">\n" +
     "    <div class=\"row-fluid\" >\n" +
@@ -98,8 +99,9 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "  <input type=\"text\" class=\"span10 offset1\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"auto()\"/>\n" +
     "</div>\n" +
     "<h3>{{listTitle}}</h3>\n" +
-    "<div class=\"row-fluid search-results\" ng-hide=\"loaded\">\n" +
-    "  Loading..\n" +
+    "<div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "  <h4> Loading.. </h4>\n" +
+    "  <div class=\"loader-slj\"></div>\n" +
     "</div>\n" +
     "<div class=\"row-fluid search-results\" ng-show=\"loaded\">\n" +
     "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
@@ -112,10 +114,9 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "          <span class=\"property\"> User Rating : </span>\n" +
     "          <rating value=\"movie.vote_average\" max=\"10\" readonly=\"true\" class=\"rating\"></rating><br/>\n" +
     "        </div>\n" +
-    "        <div class=\"row-fluid movie-list-field\" ng-if=\"isLoggedIn\" ng-click=\"setRating(movie.id)\">\n" +
+    "        <div class=\"row-fluid movie-list-field\" ng-if=\"isLoggedIn\" ng-click=\"setRating(movie)\">\n" +
     "          <span class=\"property\" > Your Rating : </span>\n" +
-    "          {{setDefaultRatings(movie.id)}}\n" +
-    "          <rating value=\"userTemp.ratings[movie.id]\" max=\"10\" readonly=\"false\" class=\"rating user-rating\"></rating>\n" +
+    "          <rating value=\"userRatings[movie.id]\" max=\"10\" readonly=\"false\" class=\"rating user-rating\"></rating>\n" +
     "        </div>\n" +
     "     </div>\n" +
     "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(movie.vote_average)\">\n" +
@@ -126,11 +127,11 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "          {{movie.vote_count}} users\n" +
     "        </div>\n" +
     "     </div>\n" +
-    "     <div class=\"pull-right rating-box ratings-box-user\" ng-class=\"getRatingClass(userTemp.ratings[movie.id])\" ng-if=\"isLoggedIn\">\n" +
-    "        <div class=\"rating-text\" ng-if=\"userTemp.ratings[movie.id] > 0\">\n" +
-    "          {{userTemp.ratings[movie.id]}} <i class=\"icon-star\"></i>\n" +
+    "     <div class=\"pull-right rating-box ratings-box-user\" ng-class=\"getRatingClass(userRatings[movie.id])\" ng-if=\"isLoggedIn\">\n" +
+    "        <div class=\"rating-text\" ng-if=\"userRatings[movie.id] > 0\">\n" +
+    "          {{userRatings[movie.id]}} <i class=\"icon-star\"></i>\n" +
     "        </div>\n" +
-    "        <div class=\"rating-text na-text\" ng-if=\"userTemp.ratings[movie.id] == 0\">\n" +
+    "        <div class=\"rating-text na-text\" ng-if=\"userRatings[movie.id] == 0\">\n" +
     "          N/A\n" +
     "        </div>\n" +
     "        <div class=\"rating-by\">\n" +
