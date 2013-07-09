@@ -19,21 +19,42 @@ angular.module( 'gojira.search', [
   $scope.search = '';
   $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
+  $scope.userRatings = {};
   /**
   * If no rating available sets to 0
   */
   $scope.setDefaultRatings = function(id){
-    if(!$scope.userTemp.ratings[id]){
-      $scope.userTemp.ratings[id] = 0;
+    if(!$rootScope.user.ratings[id]){
+      $scope.userRatings[id] = 0;
+    }else{
+      $scope.userRatings[id] = $rootScope.user.ratings[id];
     }
   }
     /**
   * Sets ratings
   */
-  $scope.setRating = function(id){
-    if(!$rootScope.user.ratings[id] || ($rootScope.user.ratings[id] != $scope.userTemp.ratings[id])){
-      $rootScope.user.ratings[id] = $scope.userTemp.ratings[id];
-      AuthService.setUser($rootScope.user);
+  $scope.setRating = function(movie){
+    var id = movie.id;
+    if(!$rootScope.user.ratings[id] || ($rootScope.user.ratings[id] != $scope.userRatings[id])){
+      $rootScope.user.ratings[id] = $scope.userRatings[id];
+      AuthService.setUser($rootScope.user, false);
+      $http({
+        url:$scope.conf.url.users + '/ratings', 
+        method: 'PUT',
+        data: {uid: AuthService.getUserCookie(), token:AuthService.getUserToken(), rating:{mid: id, val: $scope.userRatings[id]}, movie:movie},
+        headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+      }).
+      success(function(ratingData, status) {
+        if(ratingData.code == 0){
+          AlertsService.setAlert('success', 'Rating successful ');
+        }else{
+          AlertsService.setAlert('error', ratingData.status);
+        }
+      }).
+      error(function(ratingData, status) {
+        AlertsService.setAlert('error', 'Rating failed');
+        console.log(ratingData);
+      });
     }
   }
   /**
@@ -64,12 +85,12 @@ angular.module( 'gojira.search', [
     }else{
       $scope.fetch();
     }
-    $scope.$watch( function(){ return $rootScope.user }, function(user){
-      $scope.userTemp =  user;
-      if(user){
-        $scope.isLoggedIn = true;
-      }else{
-        $scope.isLoggedIn = false;
+    $scope.$watch( AuthService.isLoggedIn, function(isLoggedIn){
+      $scope.isLoggedIn = isLoggedIn;
+      if(isLoggedIn && $scope.movies){
+        angular.forEach($scope.movies, function(movie, key){
+          $scope.setDefaultRatings(movie.id);
+        });
       }
     }, true);
   };
@@ -90,6 +111,11 @@ angular.module( 'gojira.search', [
       success(function(data, status) {
         $scope.loaded = true;
         $scope.status = status;
+        if($scope.isLoggedIn){
+          angular.forEach(data.results, function(movie, key){
+            $scope.setDefaultRatings(movie.id);
+          });
+        }
         $scope.movies = data.results;
         if($scope.search == ''){
           $scope.listTitle = 'Popular movies to rate';

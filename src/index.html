@@ -14,7 +14,7 @@
     <script type="text/javascript" src="assets/libs.js"></script>
 
     <!-- this is your compiled, minified application code -->
-    <script type="text/javascript" src="assets/<%= grunt.config.get('pkg.name') %>.min.js"></script>
+    <script type="text/javascript" src="assets/<%= grunt.config.get('pkg.name') %>.js"></script>
   </head>
   <body>
     <div class="container-fluid main-container">
@@ -34,7 +34,7 @@
           </li>
           <li ui-route="/ratings">
             <a href="#/ratings" ng-class="{active:$uiRoute}">
-              <i class="icon-thumbs-up"></i>
+              <i class="icon-star"></i>
               My Ratings
             </a> 
           </li>

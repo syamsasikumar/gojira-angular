@@ -30,21 +30,40 @@ angular.module( 'gojira.user', [
   * init to be called on page load
   */
   $scope.init = function(){
+    var user, ratings, lists;
     if(AuthService.getUserCookie() && !AuthService.getUser()){
       $http({
         url:$scope.conf.url.users + '/' + AuthService.getUserCookie(), 
         method: 'GET',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       }).
-      success(function(data, status) {
-        if(data.code == 0){
-          AuthService.setUser(data);
-          AlertsService.setAlert('info', 'Logged in as ' + data.name);
+      success(function(userData, status) {
+        if(userData.code == 0){
+          user = userData;
+          $scope.isCollapsed = true;
+          $http({
+            url: $scope.conf.url.users + '/ratings/' + user._id, 
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+          }).
+          success(function(ratingData, status) {
+            if(ratingData.code == 0){
+              $scope.isCollapsed = true;
+              ratings = JSON.parse(ratingData.ratings);
+            }
+            user.ratings = ratings || {};
+            AuthService.setUser(user, true);
+            AlertsService.setAlert('info', 'Login successful ');
+          }).
+          error(function(userData, status) {
+            
+          });
+          AlertsService.setAlert('info', 'Logged in as ' + userData.name);
         }else{
           AlertsService.setAlert('error', 'Login failed');
         }
       }).
-      error(function(data, status) {
+      error(function(userData, status) {
         AlertsService.setAlert('error', 'Login Failed');
       });
     }
@@ -59,6 +78,7 @@ angular.module( 'gojira.user', [
   * login button click
   */
   $scope.login = function(name, pass){
+    var user, ratings, lists;
     $http({
       url:$scope.conf.url.users + '/login', 
       method: 'POST',
@@ -67,16 +87,32 @@ angular.module( 'gojira.user', [
     }).
     success(function(userData, status) {
       if(userData.code == 0){
+        user = userData;
         $scope.isCollapsed = true;
-        AuthService.setUser(userData);
-        AlertsService.setAlert('info', 'Login successful ');
+        $http({
+          url: $scope.conf.url.users + '/ratings/' + user._id, 
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+        }).
+        success(function(ratingData, status) {
+          if(ratingData.code == 0){
+            $scope.isCollapsed = true;
+            ratings = JSON.parse(ratingData.ratings);
+          }
+          user.ratings = ratings || {};
+          AuthService.setUser(user, true);
+          AlertsService.setAlert('info', 'Login successful ');
+        }).
+        error(function(userData, status) {
+          
+        });
       }else{
-        AlertsService.setAlert('error', data.status);
+        AlertsService.setAlert('error', userData.status);
       }
     }).
-    error(function(data, status) {
+    error(function(userData, status) {
       AlertsService.setAlert('error', 'Login Failed');
-      console.log(data);
+      console.log(userData);
     });
   };
   /**
@@ -89,18 +125,18 @@ angular.module( 'gojira.user', [
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=UTF-8'}
     }).
-    success(function(data, status) {
-      if(data.code == 0){
+    success(function(userData, status) {
+      if(userData.code == 0){
         $scope.isCollapsed = true;
-        AuthService.setUser(data);
+        AuthService.setUser(userData, true);
         AlertsService.setAlert('info', 'Registration successful ');
       }else{
-        AlertsService.setAlert('error', data.status);
+        AlertsService.setAlert('error', userData.status);
       }
     }).
-    error(function(data, status) {
+    error(function(userData, status) {
       AlertsService.setAlert('error', 'Registration error');
-      console.log(data);
+      console.log(userData);
     });
   };  
   /**

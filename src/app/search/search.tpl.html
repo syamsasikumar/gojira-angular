@@ -2,8 +2,9 @@
   <input type="text" class="span10 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>
 </div>
 <h3>{{listTitle}}</h3>
-<div class="row-fluid search-results" ng-hide="loaded">
-  Loading..
+<div class="row-fluid search-results loading-container" ng-hide="loaded">
+  <h4> Loading.. </h4>
+  <div class="loader-slj"></div>
 </div>
 <div class="row-fluid search-results" ng-show="loaded">
   <div class="list-result row-fluid" ng-repeat="movie in movies" >
@@ -16,10 +17,9 @@
           <span class="property"> User Rating : </span>
           <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating><br/>
         </div>
-        <div class="row-fluid movie-list-field" ng-if="isLoggedIn" ng-click="setRating(movie.id)">
+        <div class="row-fluid movie-list-field" ng-if="isLoggedIn" ng-click="setRating(movie)">
           <span class="property" > Your Rating : </span>
-          {{setDefaultRatings(movie.id)}}
-          <rating value="userTemp.ratings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>
+          <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>
         </div>
      </div>
      <div class="pull-right rating-box" ng-class="getRatingClass(movie.vote_average)">
@@ -30,11 +30,11 @@
           {{movie.vote_count}} users
         </div>
      </div>
-     <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(userTemp.ratings[movie.id])" ng-if="isLoggedIn">
-        <div class="rating-text" ng-if="userTemp.ratings[movie.id] > 0">
-          {{userTemp.ratings[movie.id]}} <i class="icon-star"></i>
+     <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(userRatings[movie.id])" ng-if="isLoggedIn">
+        <div class="rating-text" ng-if="userRatings[movie.id] > 0">
+          {{userRatings[movie.id]}} <i class="icon-star"></i>
         </div>
-        <div class="rating-text na-text" ng-if="userTemp.ratings[movie.id] == 0">
+        <div class="rating-text na-text" ng-if="userRatings[movie.id] == 0">
           N/A
         </div>
         <div class="rating-by">
