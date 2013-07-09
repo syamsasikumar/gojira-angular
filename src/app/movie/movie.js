@@ -2,7 +2,7 @@ angular.module( 'gojira.movie', [
   'ui.bootstrap',
   'Conf',
   'Auth',
-  'Util',
+  'Rating',
   'Alerts'
 ])
 
@@ -15,15 +15,28 @@ angular.module( 'gojira.movie', [
 /**
 * Controller for movie detail page
 */
-.controller( 'MovieCtrl', function MovieCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, UtilityService, AlertsService ) {
+.controller( 'MovieCtrl', function MovieCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;
   $scope.castMarkup = [];
   $scope.loaded = false;
+  $scope.loadingClass = AlertsService.getLoadingClass();
   
+  /**
+  * Sets ratings
+  */
+  $scope.setRating = function(){
+    var id = $scope.movie.id;
+    RatingService.setRating( id, $scope.conf.url.users , AuthService.getUserCookie(), AuthService.getUserToken(), $scope.movie.user_rating, $scope.movie, function(){
+      AlertsService.setAlert('success', 'Rating successful ');
+      $rootScope.user.ratings[id] = $scope.movie.user_rating;
+      AuthService.setUser($rootScope.user, false);
+    });
+  }
+
   $scope.getRatingClass = function(rating){
-    return UtilityService.getRatingClass(rating);
+    return RatingService.getRatingClass(rating);
   }
   /**
   * Gets cast info
@@ -86,6 +99,8 @@ angular.module( 'gojira.movie', [
       $scope.movie = data;
       if(!$rootScope.user){
         AlertsService.setAlert('info', 'Login to rate & review "' + data.title + '"');
+      }else{
+        $scope.movie.user_rating = RatingService.getDefaultRating(data.id);
       }
       $scope.loaded = true;
     }).
@@ -113,5 +128,11 @@ angular.module( 'gojira.movie', [
     }else{
       $scope.fetch();
     }
+    $scope.$watch( AuthService.isLoggedIn, function(isLoggedIn){
+      $scope.isLoggedIn = isLoggedIn;
+      if(isLoggedIn && $scope.movie){
+        $scope.movie.user_rating = RatingService.getDefaultRating($scope.movie.id);
+      }
+    }, true);
   }
 });

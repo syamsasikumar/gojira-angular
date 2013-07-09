@@ -14,6 +14,7 @@ angular.module( 'gojira.ratings', [
 * Controller for my ratings page
 */
 .controller( 'RatingsCtrl', function RatingsCtrl( $scope, $rootScope, AlertsService, $location ) {
+  $scope.userRating = 0;
   /**
   * Redirect if not logged in
   */
@@ -22,7 +23,17 @@ angular.module( 'gojira.ratings', [
       AlertsService.setAlert('error', 'You should be logged in to access your ratings page');
       $location.path('/');
     }
+     $scope.userRating = 3;
   };
+
+    /**
+  * Sets ratings
+  */
+  $scope.setRating = function(movie){
+    console.log($scope.userRating);
+  }
+
+
 })
 
 ;

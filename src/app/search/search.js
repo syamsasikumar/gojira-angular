@@ -1,7 +1,7 @@
 angular.module( 'gojira.search', [
   'ui.bootstrap',
   'Conf',
-  'Util',
+  'Rating',
   'Alerts',
   'Auth'
 ])
@@ -15,59 +15,42 @@ angular.module( 'gojira.search', [
 /**
 * Controller for search page
 */
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, UtilityService, AlertsService, AuthService ) {
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, RatingService, AlertsService, AuthService ) {
   $scope.search = '';
   $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
   $scope.userRatings = {};
+  $scope.loadingClass = AlertsService.getLoadingClass();
   /**
   * If no rating available sets to 0
   */
   $scope.setDefaultRatings = function(id){
-    if(!$rootScope.user.ratings[id]){
-      $scope.userRatings[id] = 0;
-    }else{
-      $scope.userRatings[id] = $rootScope.user.ratings[id];
-    }
+    $scope.userRatings[id] = RatingService.getDefaultRating(id);
   }
     /**
   * Sets ratings
   */
   $scope.setRating = function(movie){
     var id = movie.id;
-    if(!$rootScope.user.ratings[id] || ($rootScope.user.ratings[id] != $scope.userRatings[id])){
+    RatingService.setRating( id, $scope.conf.url.users , AuthService.getUserCookie(), AuthService.getUserToken(), $scope.userRatings[id], movie, function(){
+      AlertsService.setAlert('success', 'Rating successful ');
       $rootScope.user.ratings[id] = $scope.userRatings[id];
       AuthService.setUser($rootScope.user, false);
-      $http({
-        url:$scope.conf.url.users + '/ratings', 
-        method: 'PUT',
-        data: {uid: AuthService.getUserCookie(), token:AuthService.getUserToken(), rating:{mid: id, val: $scope.userRatings[id]}, movie:movie},
-        headers: { 'Content-Type': 'application/json; charset=UTF-8'}
-      }).
-      success(function(ratingData, status) {
-        if(ratingData.code == 0){
-          AlertsService.setAlert('success', 'Rating successful ');
-        }else{
-          AlertsService.setAlert('error', ratingData.status);
-        }
-      }).
-      error(function(ratingData, status) {
-        AlertsService.setAlert('error', 'Rating failed');
-        console.log(ratingData);
-      });
-    }
+    });
   }
+
   /**
   * Calls utility method to get rating style
   */
   $scope.getRatingClass = function(rating){
-    return UtilityService.getRatingClass(rating);
+    return RatingService.getRatingClass(rating);
   }
   /**
   * Called on page load
   */
   $scope.auto = function(){
     if(!$scope.conf.isSet){
+      $scope.loadingClass = AlertsService.getLoadingClass();
       if(!$rootScope.user){
         AlertsService.setAlert('info', 'Login to rate / review movies');
       }
@@ -98,6 +81,7 @@ angular.module( 'gojira.search', [
   * Gets the list for search - most popular by default
   */
   $scope.fetch = function() {
+    $scope.loadingClass = AlertsService.getLoadingClass();
     $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
     if($scope.search == ''){

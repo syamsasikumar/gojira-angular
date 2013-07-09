@@ -27,6 +27,11 @@ angular.module('Alerts', [])
       if(toPromise){
         $timeout.cancel(toPromise);
       }
-    } 
+    },
+    getLoadingClass : function(){
+      var classes = { 1:'pp', 2:'cb', 3:'et', 4:'lotr', 5:'gf', 6:'dk', 7:'sj', 8:'sw', 9:'us', 10:'br'};
+      var rid = Math.floor(Math.random() * 10) + 1; //Math.random() gives a value between 0 and 1
+      return classes[rid];
+    }
   };
 });

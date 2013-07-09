@@ -5,7 +5,8 @@ angular.module( 'gojira.user', [
   'ui.bootstrap',
   'Auth',
   'Conf',
-  'Alerts'
+  'Alerts',
+  'Rating'
 ])
 
 .config(function config( $routeProvider ) {
@@ -18,7 +19,7 @@ angular.module( 'gojira.user', [
 /**
 * authentication controller
 */
-.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, AuthService, ApiConfigService, $http,  $cookies, AlertsService) {
+.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, AuthService, ApiConfigService, $http,  $cookies, AlertsService, RatingService) {
   $scope.name = '';
   $scope.pass = '';
   $scope.rName = '';
@@ -41,24 +42,11 @@ angular.module( 'gojira.user', [
         if(userData.code == 0){
           user = userData;
           $scope.isCollapsed = true;
-          $http({
-            url: $scope.conf.url.users + '/ratings/' + user._id, 
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json; charset=UTF-8'}
-          }).
-          success(function(ratingData, status) {
-            if(ratingData.code == 0){
-              $scope.isCollapsed = true;
-              ratings = JSON.parse(ratingData.ratings);
-            }
+          RatingService.getRatings($scope.conf.url.users, user._id, function(ratings){
             user.ratings = ratings || {};
             AuthService.setUser(user, true);
-            AlertsService.setAlert('info', 'Login successful ');
-          }).
-          error(function(userData, status) {
-            
+            AlertsService.setAlert('info', 'Logged in as ' + userData.name);
           });
-          AlertsService.setAlert('info', 'Logged in as ' + userData.name);
         }else{
           AlertsService.setAlert('error', 'Login failed');
         }
@@ -89,22 +77,10 @@ angular.module( 'gojira.user', [
       if(userData.code == 0){
         user = userData;
         $scope.isCollapsed = true;
-        $http({
-          url: $scope.conf.url.users + '/ratings/' + user._id, 
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json; charset=UTF-8'}
-        }).
-        success(function(ratingData, status) {
-          if(ratingData.code == 0){
-            $scope.isCollapsed = true;
-            ratings = JSON.parse(ratingData.ratings);
-          }
+        RatingService.getRatings($scope.conf.url.users, user._id, function(ratings){
           user.ratings = ratings || {};
           AuthService.setUser(user, true);
           AlertsService.setAlert('info', 'Login successful ');
-        }).
-        error(function(userData, status) {
-          
         });
       }else{
         AlertsService.setAlert('error', userData.status);

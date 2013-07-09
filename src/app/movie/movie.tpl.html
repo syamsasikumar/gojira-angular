@@ -1,7 +1,7 @@
 <div class="row-fluid" ng-style="getBackground(imgUrl, movie.backdrop_path)" class="img-background" data-ng-init="init()">
   <div class="row-fluid search-results loading-container" ng-hide="loaded">
     <h4> Loading.. </h4>
-    <div class="loader-slj"></div>
+    <div class="loader" ng-class="loadingClass"></div>
   </div>
   <div class="movie-container" ng-show="loaded">
     <div class="row-fluid" >
@@ -15,7 +15,12 @@
             <i>"{{movie.tagline}}"</i> </p>
           <p> 
             <span class="property">User Rating : </span>
-            <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title ) </p>
+            <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title ) 
+          </p>
+          <div class="movie-user-rating" ng-if="isLoggedIn" ng-click="setRating()">
+            <span class="property" > Your Rating : </span>
+            <rating value="movie.user_rating" max="10" readonly="false" class="rating user-rating"></rating>
+          </div>
            <p ng-show="movie.genres">
              <span class="property">Genres : </span>
              <span class="genre" ng-repeat="(index,genre) in movie.genres"> {{genre.name}} <span class="sep" ng-show="index < (movie.genres.length -1)"> | </span></span></p>
@@ -28,8 +33,19 @@
             {{movie.vote_count}} users
           </div>
        </div>
+       <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(movie.user_rating)" ng-if="isLoggedIn">
+          <div class="rating-text" ng-if="movie.user_rating > 0">
+            {{movie.user_rating}} <i class="icon-star"></i>
+          </div>
+          <div class="rating-text na-text" ng-if="movie.user_rating == 0">
+            N/A
+          </div>
+          <div class="rating-by">
+            You
+          </div>
+       </div>
     </div>
-    <div class="row-fluid">
+    <div class="row-fluid" ng-click="setRating(movie)">
       <h5>Overview : </h5>
       <p class="left-padded-content">
         {{movie.overview}}
