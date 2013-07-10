@@ -16,7 +16,7 @@ angular.module( 'gojira', [
   'gojira.ratings',
   'gojira.lists',
   'gojira.search',
-  'gojira.movie'
+  'gojira.movies'
 ])
 
 .config( function myAppConfig ( $routeProvider ) {
@@ -81,7 +81,7 @@ angular.module( 'gojira.lists', [
 })
 
 ;
-angular.module( 'gojira.movie', [
+angular.module( 'gojira.movies', [
   'ui.bootstrap',
   'Conf',
   'Auth',
@@ -91,14 +91,14 @@ angular.module( 'gojira.movie', [
 
 .config(function config( $routeProvider ) {
   $routeProvider.when( '/movie/:id', {
-    controller: 'MovieCtrl',
-    templateUrl: 'movie/movie.tpl.html'
+    controller: 'MoviesCtrl',
+    templateUrl: 'movies/movies.tpl.html'
   });
 })
 /**
 * Controller for movie detail page
 */
-.controller( 'MovieCtrl', function MovieCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService ) {
+.controller( 'MoviesCtrl', function MoviesCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;
@@ -222,7 +222,11 @@ angular.module( 'gojira.movie', [
 angular.module( 'gojira.ratings', [
   'placeholders',
   'ui.bootstrap',
-  'Alerts'
+  'Alerts',
+  'Conf',
+  'Rating',
+  'Alerts',
+  'Auth'
 ])
 
 .config(function config( $routeProvider ) {
@@ -234,8 +238,37 @@ angular.module( 'gojira.ratings', [
 /**
 * Controller for my ratings page
 */
-.controller( 'RatingsCtrl', function RatingsCtrl( $scope, $rootScope, AlertsService, $location ) {
-  $scope.userRating = 0;
+.controller( 'RatingsCtrl', function RatingsCtrl( $scope, $rootScope, $http, ApiConfigService, RatingService, AlertsService, AuthService, $location ) {
+  $scope.loaded = false;
+  $scope.conf = ApiConfigService.getConf();
+  $scope.userRatings = {};
+  $scope.loadingClass = AlertsService.getLoadingClass();
+  $scope.filter = "";
+  /**
+  * If no rating available sets to 0
+  */
+  $scope.setDefaultRatings = function(id){
+    $scope.userRatings[id] = RatingService.getDefaultRating(id);
+  }
+    /**
+  * Sets ratings
+  */
+  $scope.setRating = function(id){
+    var id = id;
+    RatingService.setRating( id, $scope.conf.url.users , AuthService.getUserCookie(), AuthService.getUserToken(), $scope.userRatings[id], function(){
+      AlertsService.setAlert('success', 'Rating successful ');
+      $rootScope.user.ratings[id] = $scope.userRatings[id];
+      AuthService.setUser($rootScope.user, false);
+    });
+  }
+
+  /**
+  * Calls utility method to get rating style
+  */
+  $scope.getRatingClass = function(rating){
+    return RatingService.getRatingClassBg(rating);
+  }
+
   /**
   * Redirect if not logged in
   */
@@ -243,20 +276,76 @@ angular.module( 'gojira.ratings', [
     if(!$rootScope.user){
       AlertsService.setAlert('error', 'You should be logged in to access your ratings page');
       $location.path('/');
+    }else{
+      $scope.auto();
     }
-     $scope.userRating = 3;
   };
 
-    /**
-  * Sets ratings
+  /**
+  * Called on page load
   */
-  $scope.setRating = function(movie){
-    console.log($scope.userRating);
+  $scope.auto = function(){
+    if(!$scope.conf.isSet){
+      $scope.loadingClass = AlertsService.getLoadingClass();
+      if(!$rootScope.user){
+        AlertsService.setAlert('info', 'Login to rate / review movies');
+      }
+      $http.get($scope.conf.url.movies + '/conf', {}, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        }).
+        success(function(data, status) {
+          $scope.conf.image.baseUrl = data.images.base_url;
+          ApiConfigService.setConf($scope.conf);
+          $scope.fetch();
+        }).
+        error(function(data, status) {
+            
+        });
+    }else{
+      $scope.fetch();
+    }
+  }
+  $scope.fetch = function(){
+    $scope.loadingClass = AlertsService.getLoadingClass();
+    $scope.loaded = false;
+    $scope.imgUrl = $scope.conf.image.baseUrl;
+    $http({
+      url: $scope.conf.url.users + '/ratings/' + $rootScope.user._id + '?movies=1', 
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+    }).
+    success(function(ratingData, status) {
+      if(ratingData.code == 0 && ratingData.ratings.length){
+        $scope.ratings = JSON.parse(ratingData.ratings);
+        angular.forEach($scope.ratings, function(rating, movie){
+          $scope.setDefaultRatings(movie);
+        });
+        $scope.movies = $scope.movieStore = ratingData.movies;
+      }
+      $scope.loaded = true;
+    }).
+    error(function(ratingData, status) {
+      AlertsService.setAlert('error', 'Error fetching your ratings');
+      $scope.loaded = true;
+    });
+  };
+  $scope.filterMovie = function(){
+    var movies = [];
+    if($scope.filter != '' && $scope.movieStore){
+      angular.forEach($scope.movieStore, function(movie, key){
+        if(movie.title.search(new RegExp($scope.filter, "i")) != -1){
+          movies.push(movie);
+        }
+      });
+    }else{
+      movies = $scope.movieStore;
+    }
+    $scope.movies = movies;
   }
 
 
-})
 
+})
 ;
 angular.module( 'gojira.search', [
   'ui.bootstrap',
@@ -402,7 +491,7 @@ angular.module( 'gojira.user', [
 /**
 * authentication controller
 */
-.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, AuthService, ApiConfigService, $http,  $cookies, AlertsService, RatingService) {
+.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, $location, $http,  $cookies, AlertsService, RatingService, AuthService, ApiConfigService) {
   $scope.name = '';
   $scope.pass = '';
   $scope.rName = '';
@@ -507,6 +596,7 @@ angular.module( 'gojira.user', [
       $scope.isCollapsed = !$scope.isCollapsed;
     }else{
       AuthService.logout();
+      $location.path('/');
       AlertsService.setAlert('info', 'Logout successful ');
     }
   };
@@ -677,6 +767,15 @@ angular.module('Rating', ['Alerts'])
         return "high";
       }
     },
+    getRatingClassBg : function(rating){
+      if(rating < 5){
+        return "low-bg";
+      }else if (rating < 7){
+        return "med-bg";
+      }else {
+        return "high-bg";
+      }
+    },
     getRatings : function(url, id, cb){
       var callback = cb;
       var ratings = {};
@@ -686,7 +785,7 @@ angular.module('Rating', ['Alerts'])
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(ratingData, status) {
-        if(ratingData.code == 0){
+        if(ratingData.code == 0 && ratingData.ratings.length){
           ratings = JSON.parse(ratingData.ratings);
         }
         callback(ratings);
@@ -725,7 +824,7 @@ angular.module('Rating', ['Alerts'])
     }
   };
 });
-angular.module('templates-app', ['lists/lists.tpl.html', 'movie/movie.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+angular.module('templates-app', ['lists/lists.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
 
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/lists.tpl.html",
@@ -734,8 +833,8 @@ angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($temp
     "</div>");
 }]);
 
-angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("movie/movie.tpl.html",
+angular.module("movies/movies.tpl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("movies/movies.tpl.html",
     "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\" data-ng-init=\"init()\">\n" +
     "  <div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
     "    <h4> Loading.. </h4>\n" +
@@ -830,8 +929,35 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
 
 angular.module("ratings/ratings.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("ratings/ratings.tpl.html",
-    "<div class=\"row-fluid\" data-ng-init=\"init()\">\n" +
-    "  Ratings\n" +
+    "<div class=\"row-fluid search-input\" data-ng-init=\"init()\">\n" +
+    "  <input type=\"text\" class=\"span10 offset1\" placeholder=\"Type to search for movies you rated\" ng-model=\"filter\" ng-keyup=\"filterMovie()\"/>\n" +
+    "</div>\n" +
+    "<h3>Your Ratings</h3>\n" +
+    "<div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "  <h4> Loading.. </h4>\n" +
+    "  <div class=\"loader\" ng-class=\"loadingClass\"></div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"loaded && ratings\">\n" +
+    "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "    <div class=\"span1\">\n" +
+    "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
+    "    </div>\n" +
+    "    <div class=\"span8\">\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n" +
+    "        <div class=\"row-fluid movie-list-field\"  ng-click=\"setRating(movie.id)\">\n" +
+    "          <span class=\"property\" > Your Rating : </span>\n" +
+    "          <rating value=\"userRatings[movie.id]\" max=\"10\" readonly=\"false\" class=\"rating user-rating\"></rating>\n" +
+    "        </div>\n" +
+    "     </div>\n" +
+    "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(userRatings[movie.id])\" >\n" +
+    "        <div class=\"rating-text-user\" ng-if=\"userRatings[movie.id] > 0\">\n" +
+    "          {{userRatings[movie.id]}} <i class=\"icon-star\"></i>\n" +
+    "        </div>\n" +
+    "     </div>\n" +
+    "  </div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"!ratings && loaded\">\n" +
+    "  No ratings found.\n" +
     "</div>\n" +
     "");
 }]);

@@ -1,4 +1,4 @@
-angular.module('templates-app', ['lists/lists.tpl.html', 'movie/movie.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+angular.module('templates-app', ['lists/lists.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
 
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/lists.tpl.html",
@@ -7,8 +7,8 @@ angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($temp
     "</div>");
 }]);
 
-angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
-  $templateCache.put("movie/movie.tpl.html",
+angular.module("movies/movies.tpl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("movies/movies.tpl.html",
     "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\" data-ng-init=\"init()\">\n" +
     "  <div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
     "    <h4> Loading.. </h4>\n" +
@@ -103,8 +103,35 @@ angular.module("movie/movie.tpl.html", []).run(["$templateCache", function($temp
 
 angular.module("ratings/ratings.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("ratings/ratings.tpl.html",
-    "<div class=\"row-fluid\" data-ng-init=\"init()\">\n" +
-    "  Ratings\n" +
+    "<div class=\"row-fluid search-input\" data-ng-init=\"init()\">\n" +
+    "  <input type=\"text\" class=\"span10 offset1\" placeholder=\"Type to search for movies you rated\" ng-model=\"filter\" ng-keyup=\"filterMovie()\"/>\n" +
+    "</div>\n" +
+    "<h3>Your Ratings</h3>\n" +
+    "<div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "  <h4> Loading.. </h4>\n" +
+    "  <div class=\"loader\" ng-class=\"loadingClass\"></div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"loaded && ratings\">\n" +
+    "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "    <div class=\"span1\">\n" +
+    "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img\"></img>\n" +
+    "    </div>\n" +
+    "    <div class=\"span8\">\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n" +
+    "        <div class=\"row-fluid movie-list-field\"  ng-click=\"setRating(movie.id)\">\n" +
+    "          <span class=\"property\" > Your Rating : </span>\n" +
+    "          <rating value=\"userRatings[movie.id]\" max=\"10\" readonly=\"false\" class=\"rating user-rating\"></rating>\n" +
+    "        </div>\n" +
+    "     </div>\n" +
+    "     <div class=\"pull-right rating-box\" ng-class=\"getRatingClass(userRatings[movie.id])\" >\n" +
+    "        <div class=\"rating-text-user\" ng-if=\"userRatings[movie.id] > 0\">\n" +
+    "          {{userRatings[movie.id]}} <i class=\"icon-star\"></i>\n" +
+    "        </div>\n" +
+    "     </div>\n" +
+    "  </div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"!ratings && loaded\">\n" +
+    "  No ratings found.\n" +
     "</div>\n" +
     "");
 }]);
