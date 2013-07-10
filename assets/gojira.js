@@ -837,8 +837,7 @@ angular.module("movies/movies.tpl.html", []).run(["$templateCache", function($te
   $templateCache.put("movies/movies.tpl.html",
     "<div class=\"row-fluid\" ng-style=\"getBackground(imgUrl, movie.backdrop_path)\" class=\"img-background\" data-ng-init=\"init()\">\n" +
     "  <div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
-    "    <h4> Loading.. </h4>\n" +
-    "    <div class=\"loader\" ng-class=\"loadingClass\"></div>\n" +
+    "    <div class=\"loader\" ng-class=\"loadingClass\"><h4> Loading.. </h4></div>\n" +
     "  </div>\n" +
     "  <div class=\"movie-container\" ng-show=\"loaded\">\n" +
     "    <div class=\"row-fluid\" >\n" +
@@ -934,8 +933,7 @@ angular.module("ratings/ratings.tpl.html", []).run(["$templateCache", function($
     "</div>\n" +
     "<h3>Your Ratings</h3>\n" +
     "<div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
-    "  <h4> Loading.. </h4>\n" +
-    "  <div class=\"loader\" ng-class=\"loadingClass\"></div>\n" +
+    "  <div class=\"loader\" ng-class=\"loadingClass\"><h4> Loading.. </h4></div>\n" +
     "</div>\n" +
     "<div class=\"row-fluid search-results\" ng-show=\"loaded && ratings\">\n" +
     "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
@@ -969,8 +967,7 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
     "</div>\n" +
     "<h3>{{listTitle}}</h3>\n" +
     "<div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
-    "  <h4> Loading.. </h4>\n" +
-    "  <div class=\"loader\" ng-class=\"loadingClass\"></div>\n" +
+    "  <div class=\"loader\" ng-class=\"loadingClass\"><h4> Loading.. </h4></div>\n" +
     "</div>\n" +
     "<div class=\"row-fluid search-results\" ng-show=\"loaded\">\n" +
     "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
@@ -1028,6 +1025,8 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
     "      <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\">\n" +
     "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register(rName, rPass,rcPass)\">Register</button>\n" +
     "    </div>\n" +
+    "  </div>\n" +
+    "  <div class=\"row-fuild user-footer\">\n" +
     "  </div>\n" +
     "</div>");
 }]);
