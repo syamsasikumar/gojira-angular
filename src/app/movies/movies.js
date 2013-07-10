@@ -1,4 +1,4 @@
-angular.module( 'gojira.movie', [
+angular.module( 'gojira.movies', [
   'ui.bootstrap',
   'Conf',
   'Auth',
@@ -8,14 +8,14 @@ angular.module( 'gojira.movie', [
 
 .config(function config( $routeProvider ) {
   $routeProvider.when( '/movie/:id', {
-    controller: 'MovieCtrl',
-    templateUrl: 'movie/movie.tpl.html'
+    controller: 'MoviesCtrl',
+    templateUrl: 'movies/movies.tpl.html'
   });
 })
 /**
 * Controller for movie detail page
 */
-.controller( 'MovieCtrl', function MovieCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService ) {
+.controller( 'MoviesCtrl', function MoviesCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;

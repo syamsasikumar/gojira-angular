@@ -19,7 +19,7 @@ angular.module( 'gojira.user', [
 /**
 * authentication controller
 */
-.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, AuthService, ApiConfigService, $http,  $cookies, AlertsService, RatingService) {
+.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, $location, $http,  $cookies, AlertsService, RatingService, AuthService, ApiConfigService) {
   $scope.name = '';
   $scope.pass = '';
   $scope.rName = '';
@@ -124,6 +124,7 @@ angular.module( 'gojira.user', [
       $scope.isCollapsed = !$scope.isCollapsed;
     }else{
       AuthService.logout();
+      $location.path('/');
       AlertsService.setAlert('info', 'Logout successful ');
     }
   };

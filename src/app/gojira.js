@@ -7,7 +7,7 @@ angular.module( 'gojira', [
   'gojira.ratings',
   'gojira.lists',
   'gojira.search',
-  'gojira.movie'
+  'gojira.movies'
 ])
 
 .config( function myAppConfig ( $routeProvider ) {

@@ -2,21 +2,31 @@
 <html ng-app="gojira">
   <head>
     <title>gojira</title>
-
-    <!-- your compiles CSS -->
     <link rel="stylesheet" type="text/css" href="assets/<%= grunt.config.get('pkg.name') %>.css"/>
 
     <!--[if IE 7>
     <link rel="stylesheet" href="assets/font-awesome-ie7.min.css>
     <![endif]-->
 
-    <!-- libs.js contains all of the concatenated third-party libraries -->
+
     <script type="text/javascript" src="assets/libs.js"></script>
 
-    <!-- this is your compiled, minified application code -->
     <script type="text/javascript" src="assets/<%= grunt.config.get('pkg.name') %>.js"></script>
   </head>
   <body>
+    <!-- TODO: remove this hack -->
+    <div class="preload">
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/slj_qhrfjh.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/et_liqee1.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/gandalf_pkkeoe.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/gf_lgq6im.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/joker_o9b1yp.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/c18_b3o8rg.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/sanjuro_fibdyg.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/yoda_whqnmk.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/us_vw6d2u.png" />
+      <img src="http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/br_mdci9r.png" />
+    </div>
     <div class="container-fluid main-container">
       <div class="nav-bar" ng-controller="AppCtrl" data-ng-init="init()">
         <ul class="top-nav">

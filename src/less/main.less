@@ -262,7 +262,11 @@ footer{
   box-shadow: 0 0 20px grey,inset 0 0 5px grey;
   -webkit-animation: rotate 2.2s infinite ease-in-out;
 }
-//TODO: preload
+
+//TODO : remove this hack
+.preload{
+  display:none;
+}
 .pp{
   background: url('http://res.cloudinary.com/dtmnbo2hw/image/upload/v1373409219/slj_qhrfjh.png') center bottom no-repeat;
 }
@@ -307,4 +311,5 @@ footer{
 /** modules **/
 @import 'user.less';
 @import 'search.less';
-@import 'movie.less';
+@import 'movies.less';
+@import 'ratings.less';

@@ -11,6 +11,15 @@ angular.module('Rating', ['Alerts'])
         return "high";
       }
     },
+    getRatingClassBg : function(rating){
+      if(rating < 5){
+        return "low-bg";
+      }else if (rating < 7){
+        return "med-bg";
+      }else {
+        return "high-bg";
+      }
+    },
     getRatings : function(url, id, cb){
       var callback = cb;
       var ratings = {};
@@ -20,7 +29,7 @@ angular.module('Rating', ['Alerts'])
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(ratingData, status) {
-        if(ratingData.code == 0){
+        if(ratingData.code == 0 && ratingData.ratings.length){
           ratings = JSON.parse(ratingData.ratings);
         }
         callback(ratings);
