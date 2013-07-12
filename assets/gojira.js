@@ -1044,6 +1044,9 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
     "<div class=\"user-box\">\n" +
     "  <div class=\"row-fluid\">\n" +
     "    <div class=\"row-fuild user-ribbon\">\n" +
+    "      <span class=\"pull-right\" ng-click=\"close()\">\n" +
+    "        <i class=\"icon-remove-sign close-btn\"></i>\n" +
+    "      </span>\n" +
     "    </div>\n" +
     "    <div class=\"row-fluid user-box-inner\">\n" +
     "      <div class=\"login-box span4 offset2\">\n" +
