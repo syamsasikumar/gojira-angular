@@ -491,18 +491,22 @@ angular.module( 'gojira.user', [
 /**
 * authentication controller
 */
-.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, $location, $http,  $cookies, AlertsService, RatingService, AuthService, ApiConfigService) {
-  $scope.name = '';
-  $scope.pass = '';
-  $scope.rName = '';
-  $scope.rPass = '';
-  $scope.rcPass = '';
-  $scope.isCollapsed = true;
-  $scope.conf = ApiConfigService.getConf();
+.controller( 'AuthCtrl', function AuthCtrl ( $scope, $rootScope, $location, $http, $dialog, AlertsService, RatingService, AuthService, ApiConfigService) {
+
+  $scope.dialogOpts = {
+    backdrop: true,
+    keyboard: true,
+    backdropClick: true,
+    templateUrl: 'user/anon.tpl.html',
+    controller: 'LoginBoxController',
+    dialogFade: true
+  };
+
   /**
   * init to be called on page load
   */
   $scope.init = function(){
+    $scope.conf = ApiConfigService.getConf();
     var user, ratings, lists;
     if(AuthService.getUserCookie() && !AuthService.getUser()){
       $http({
@@ -528,12 +532,58 @@ angular.module( 'gojira.user', [
       });
     }
     $scope.$watch( AuthService.isLoggedIn, function(isLoggedIn){
-      $scope.userContent = (isLoggedIn)? 'user/user.tpl.html':'user/anon.tpl.html';
       $scope.userIcon = (isLoggedIn)? 'icon-signout':'icon-unlock';
       $scope.userText = (isLoggedIn)? ('Logout ' + AuthService.getUser().name) : 'Login / Register';
       $rootScope.user = AuthService.getUser();
     });
   };
+
+  /**
+  * Toggle login/ logout UI
+  */
+  $scope.toggleUser = function(){
+    AlertsService.clearAlert();
+    if(!AuthService.isLoggedIn()){
+      $scope.openLoginBox();
+    }else{
+      AuthService.logout();
+      $location.path('/');
+      AlertsService.setAlert('info', 'Logout successful ');
+    }
+  };
+
+$scope.openLoginBox = function(){
+    var d = $dialog.dialog($scope.dialogOpts);
+    d.open().then(function(result){
+    });
+  };
+
+})
+/**
+* Controller for user admin
+*/
+.controller( 'UserCtrl', function UserCtrl ( $scope, $rootScope, $routeParams, $location, AlertsService) {
+  if($rootScope.user && $rootScope.user._id == $routeParams.id){
+
+  }else{
+    $location.path('/');
+  }
+})
+/**
+* Controller for loginbox
+*/
+.controller( 'LoginBoxController', function LoginBoxController ( $scope, $http, dialog, AlertsService, RatingService, AuthService, ApiConfigService) {
+  $scope.name = '';
+  $scope.pass = '';
+  $scope.rName = '';
+  $scope.rPass = '';
+  $scope.rcPass = '';
+  $scope.isCollapsed = true;
+  $scope.conf = ApiConfigService.getConf();
+
+   $scope.close = function(){
+      dialog.close();
+    };
   /**
   * login button click
   */
@@ -548,19 +598,21 @@ angular.module( 'gojira.user', [
     success(function(userData, status) {
       if(userData.code == 0){
         user = userData;
-        $scope.isCollapsed = true;
         RatingService.getRatings($scope.conf.url.users, user._id, function(ratings){
           user.ratings = ratings || {};
           AuthService.setUser(user, true);
           AlertsService.setAlert('info', 'Login successful ');
+          $scope.close();
         });
       }else{
         AlertsService.setAlert('error', userData.status);
+        $scope.close();
       }
     }).
     error(function(userData, status) {
       AlertsService.setAlert('error', 'Login Failed');
       console.log(userData);
+      $scope.close();
     });
   };
   /**
@@ -575,42 +627,21 @@ angular.module( 'gojira.user', [
     }).
     success(function(userData, status) {
       if(userData.code == 0){
-        $scope.isCollapsed = true;
         AuthService.setUser(userData, true);
         AlertsService.setAlert('info', 'Registration successful ');
+        $scope.close();
       }else{
         AlertsService.setAlert('error', userData.status);
+        $scope.close();
       }
     }).
     error(function(userData, status) {
       AlertsService.setAlert('error', 'Registration error');
       console.log(userData);
+      $scope.close();
     });
-  };  
-  /**
-  * Toggle login/ logout UI
-  */
-  $scope.toggleUser = function(){
-    AlertsService.clearAlert();
-    if(!AuthService.isLoggedIn()){
-      $scope.isCollapsed = !$scope.isCollapsed;
-    }else{
-      AuthService.logout();
-      $location.path('/');
-      AlertsService.setAlert('info', 'Logout successful ');
-    }
   };
 })
-/**
-* Controller for user admin
-*/
-.controller( 'UserCtrl', function UserCtrl ( $scope, $rootScope, $routeParams, $location, AlertsService) {
-  if($rootScope.user && $rootScope.user._id == $routeParams.id){
-
-  }else{
-    $location.path('/');
-  }
-});
 ;
 
 
@@ -1010,23 +1041,25 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
 
 angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("user/anon.tpl.html",
-    "<div class=\"row-fluid\">\n" +
+    "<div class=\"user-box\">\n" +
     "  <div class=\"row-fluid\">\n" +
-    "    <div class=\"login-box span4 offset2\">\n" +
-    "      <h5>Login</h5>\n" +
-    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"name\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"pass\">\n" +
-    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"login(name, pass)\" >Login</button>\n" +
+    "    <div class=\"row-fuild user-ribbon\">\n" +
     "    </div>\n" +
-    "    <div class=\"reg-box span4 \">\n" +
-    "      <h5>Register</h5>\n" +
-    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"rName\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"rPass\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\">\n" +
-    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register(rName, rPass,rcPass)\">Register</button>\n" +
+    "    <div class=\"row-fluid user-box-inner\">\n" +
+    "      <div class=\"login-box span4 offset2\">\n" +
+    "        <h5>Login</h5>\n" +
+    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"name\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"pass\">\n" +
+    "        <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"login(name, pass)\" >Login</button>\n" +
+    "      </div>\n" +
+    "      <div class=\"reg-box span4 \">\n" +
+    "        <h5>Register</h5>\n" +
+    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"rName\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"rPass\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\">\n" +
+    "        <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register(rName, rPass,rcPass)\">Register</button>\n" +
+    "      </div>\n" +
     "    </div>\n" +
-    "  </div>\n" +
-    "  <div class=\"row-fuild user-footer\">\n" +
     "  </div>\n" +
     "</div>");
 }]);

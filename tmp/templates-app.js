@@ -184,23 +184,25 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
 
 angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("user/anon.tpl.html",
-    "<div class=\"row-fluid\">\n" +
+    "<div class=\"user-box\">\n" +
     "  <div class=\"row-fluid\">\n" +
-    "    <div class=\"login-box span4 offset2\">\n" +
-    "      <h5>Login</h5>\n" +
-    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"name\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"pass\">\n" +
-    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"login(name, pass)\" >Login</button>\n" +
+    "    <div class=\"row-fuild user-ribbon\">\n" +
     "    </div>\n" +
-    "    <div class=\"reg-box span4 \">\n" +
-    "      <h5>Register</h5>\n" +
-    "      <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"rName\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"rPass\">\n" +
-    "      <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\">\n" +
-    "      <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register(rName, rPass,rcPass)\">Register</button>\n" +
+    "    <div class=\"row-fluid user-box-inner\">\n" +
+    "      <div class=\"login-box span4 offset2\">\n" +
+    "        <h5>Login</h5>\n" +
+    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"name\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"pass\">\n" +
+    "        <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"login(name, pass)\" >Login</button>\n" +
+    "      </div>\n" +
+    "      <div class=\"reg-box span4 \">\n" +
+    "        <h5>Register</h5>\n" +
+    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"rName\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"rPass\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\">\n" +
+    "        <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register(rName, rPass,rcPass)\">Register</button>\n" +
+    "      </div>\n" +
     "    </div>\n" +
-    "  </div>\n" +
-    "  <div class=\"row-fuild user-footer\">\n" +
     "  </div>\n" +
     "</div>");
 }]);
