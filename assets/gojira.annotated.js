@@ -48,7 +48,9 @@
   ;
   angular.module('gojira.lists', [
     'placeholders',
-    'ui.bootstrap'
+    'ui.bootstrap',
+    'List',
+    'Util'
   ]).config([
     '$routeProvider',
     function config($routeProvider) {
@@ -60,14 +62,94 @@
   ]).controller('ListsCtrl', [
     '$scope',
     '$rootScope',
-    'AlertsService',
     '$location',
-    function ListsCtrl($scope, $rootScope, AlertsService, $location) {
+    '$dialog',
+    'AlertsService',
+    'ListService',
+    'UtilityService',
+    function ListsCtrl($scope, $rootScope, $location, $dialog, AlertsService, ListService, UtilityService) {
+      $scope.dialogOpts = {
+        backdrop: true,
+        keyboard: true,
+        backdropClick: true,
+        templateUrl: 'lists/box.tpl.html',
+        controller: 'ListBoxCtrl',
+        dialogFade: true
+      };
       $scope.init = function () {
         if (!$rootScope.user) {
           AlertsService.setAlert('error', 'You should be logged in to access your lists page');
           $location.path('/');
+        } else {
+          $scope.auto();
         }
+      };
+      $scope.auto = function () {
+        $scope.lists = $rootScope.user.lists;
+        if (UtilityService.getObjectLength($scope.lists) == 0) {
+          $scope.message = 'No lists found';
+        } else {
+        }
+      };
+      $scope.openListBox = function (action, id) {
+        if (action == 'create') {
+          ListService.setListBox(action, {});
+        } else {
+          ListService.setListBox(action, $scope.lists[id]);
+        }
+        var d = $dialog.dialog($scope.dialogOpts);
+        d.open().then(function (result) {
+        });
+      };
+    }
+  ]).controller('ListBoxCtrl', [
+    '$scope',
+    '$rootScope',
+    '$location',
+    'dialog',
+    'AlertsService',
+    'ListService',
+    'ApiConfigService',
+    'AuthService',
+    function ListBoxCtrl($scope, $rootScope, $location, dialog, AlertsService, ListService, ApiConfigService, AuthService) {
+      $scope.colors = ListService.getListColors();
+      $scope.conf = ApiConfigService.getConf();
+      $scope.box = ListService.getListBox();
+      $scope.action = $scope.box.action;
+      $scope.name = $scope.box.data.name ? $scope.box.data.name : '';
+      $scope.description = $scope.box.data.description ? $scope.box.data.description : '';
+      $scope.color = $scope.box.data.color ? $scope.box.data.color : $scope.colors[0];
+      $scope._id = $scope.box.data._id ? $scope.box.data._id : 0;
+      $scope.movies = $scope.box.data.movies ? $scope.box.data.movies : {};
+      $scope.close = function () {
+        dialog.close();
+      };
+      $scope.setListColor = function (color) {
+        $scope.color = color;
+      };
+      $scope.saveList = function () {
+        var list = {
+            _id: $scope._id,
+            name: $scope.name,
+            description: $scope.description,
+            color: $scope.color,
+            movies: $scope.movies
+          };
+        if ($scope.action == 'create' || $scope.action == 'edit') {
+          ListService.saveList($rootScope.user._id, AuthService.getUserToken(), $scope.conf.url.users, list, function (id) {
+            list._id = id;
+            $rootScope.user.lists[id] = list;
+            AuthService.setUser($rootScope.user, false);
+            AlertsService.setAlert('success', 'List Saved');
+          });
+        } else if ($scope.action == 'delete') {
+          ListService.deleteList($rootScope.user._id, AuthService.getUserToken(), $scope.conf.url.users, list._id, function (id) {
+            delete $rootScope.user.lists[id];
+            AuthService.setUser($rootScope.user, false);
+            AlertsService.setAlert('success', 'List Deleted');
+          });
+        }
+        dialog.close();
       };
     }
   ]);
@@ -178,7 +260,6 @@
     }
   ]);
   angular.module('gojira.ratings', [
-    'placeholders',
     'ui.bootstrap',
     'Alerts',
     'Conf',
@@ -233,9 +314,6 @@
       $scope.auto = function () {
         if (!$scope.conf.isSet) {
           $scope.loadingClass = AlertsService.getLoadingClass();
-          if (!$rootScope.user) {
-            AlertsService.setAlert('info', 'Login to rate / review movies');
-          }
           $http.get($scope.conf.url.movies + '/conf', {}, { headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' } }).success(function (data, status) {
             $scope.conf.image.baseUrl = data.images.base_url;
             ApiConfigService.setConf($scope.conf);
@@ -250,21 +328,12 @@
         $scope.loadingClass = AlertsService.getLoadingClass();
         $scope.loaded = false;
         $scope.imgUrl = $scope.conf.image.baseUrl;
-        $http({
-          url: $scope.conf.url.users + '/ratings/' + $rootScope.user._id + '?movies=1',
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json; charset=UTF-8' }
-        }).success(function (ratingData, status) {
-          if (ratingData.code == 0 && ratingData.ratings.length) {
-            $scope.ratings = JSON.parse(ratingData.ratings);
-            angular.forEach($scope.ratings, function (rating, movie) {
-              $scope.setDefaultRatings(movie);
-            });
-            $scope.movies = $scope.movieStore = ratingData.movies;
-          }
-          $scope.loaded = true;
-        }).error(function (ratingData, status) {
-          AlertsService.setAlert('error', 'Error fetching your ratings');
+        RatingService.getRatingsWithMovies($scope.conf.url.users, $rootScope.user._id, function (ratings, movies) {
+          $scope.ratings = ratings;
+          angular.forEach($scope.ratings, function (rating, movie) {
+            $scope.setDefaultRatings(movie);
+          });
+          $scope.movies = $scope.movieStore = movies;
           $scope.loaded = true;
         });
       };
@@ -395,7 +464,8 @@
     'Auth',
     'Conf',
     'Alerts',
-    'Rating'
+    'Rating',
+    'List'
   ]).config([
     '$routeProvider',
     function config($routeProvider) {
@@ -420,7 +490,7 @@
         keyboard: true,
         backdropClick: true,
         templateUrl: 'user/anon.tpl.html',
-        controller: 'LoginBoxController',
+        controller: 'LoginBoxCtrl',
         dialogFade: true
       };
       $scope.init = function () {
@@ -481,15 +551,16 @@
         $location.path('/');
       }
     }
-  ]).controller('LoginBoxController', [
+  ]).controller('LoginBoxCtrl', [
     '$scope',
     '$http',
     'dialog',
     'AlertsService',
     'RatingService',
+    'ListService',
     'AuthService',
     'ApiConfigService',
-    function LoginBoxController($scope, $http, dialog, AlertsService, RatingService, AuthService, ApiConfigService) {
+    function LoginBoxCtrl($scope, $http, dialog, AlertsService, RatingService, ListService, AuthService, ApiConfigService) {
       $scope.name = '';
       $scope.pass = '';
       $scope.rName = '';
@@ -515,9 +586,12 @@
             user = userData;
             RatingService.getRatings($scope.conf.url.users, user._id, function (ratings) {
               user.ratings = ratings || {};
-              AuthService.setUser(user, true);
-              AlertsService.setAlert('info', 'Login successful ');
-              $scope.close();
+              ListService.getAllLists($scope.conf.url.users, user._id, function (lists) {
+                user.lists = lists || {};
+                AuthService.setUser(user, true);
+                AlertsService.setAlert('info', 'Login successful ');
+                $scope.close();
+              });
             });
           } else {
             AlertsService.setAlert('error', userData.status);
@@ -553,6 +627,15 @@
           console.log(userData);
           $scope.close();
         });
+      };
+      $scope.keypress = function (form, event) {
+        if (event.keyCode == 13) {
+          if (form == 'login') {
+            $scope.login($scope.name, $scope.pass);
+          } else {
+            $scope.register($scope.rName, $scope.rPass, $scope.rcPass);
+          }
+        }
       };
     }
   ]);
@@ -677,6 +760,103 @@
       };
     }
   ]);
+  angular.module('List', ['Alerts']).factory('ListService', [
+    '$http',
+    '$rootScope',
+    'AlertsService',
+    function ($http, $rootScope, AlertsService) {
+      var _box = {};
+      return {
+        getListBox: function () {
+          return _box;
+        },
+        setListBox: function (action, data) {
+          _box.action = action;
+          _box.data = data;
+        },
+        getAllLists: function (url, id, cb) {
+          var callback = cb;
+          var lists = {};
+          $http({
+            url: url + '/lists/' + id,
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json; charset=UTF-8' }
+          }).success(function (listData, status) {
+            if (listData.code == 0) {
+              lists = listData.lists;
+            }
+            callback(lists);
+          }).error(function (listData, status) {
+            callback(lists);
+          });
+        },
+        getList: function () {
+        },
+        saveList: function (uid, token, url, list, callback) {
+          var id = list._id;
+          $http({
+            url: url + '/lists',
+            method: 'PUT',
+            data: {
+              uid: uid,
+              token: token,
+              list: list
+            },
+            headers: { 'Content-Type': 'application/json; charset=UTF-8' }
+          }).success(function (listData, status) {
+            if (listData.code == 0) {
+              if (!id) {
+                callback(listData.id);
+              } else {
+                callback(id);
+              }
+            } else {
+              AlertsService.setAlert('error', listData.status);
+            }
+          }).error(function (listData, status) {
+            AlertsService.setAlert('error', 'List Operation failed');
+          });
+        },
+        deleteList: function (uid, token, url, lid, callback) {
+          var id = lid;
+          $http({
+            url: url + '/lists',
+            method: 'DELETE',
+            data: {
+              uid: uid,
+              token: token,
+              lid: lid
+            },
+            headers: { 'Content-Type': 'application/json; charset=UTF-8' }
+          }).success(function (listData, status) {
+            if (listData.code == 0) {
+              callback(id);
+            } else {
+              AlertsService.setAlert('error', listData.status);
+            }
+          }).error(function (listData, status) {
+            AlertsService.setAlert('error', 'List Operation failed');
+          });
+        },
+        addMovieToList: function () {
+        },
+        deleteMovieFromList: function () {
+        },
+        getListsForMovie: function () {
+        },
+        getListColors: function () {
+          return [
+            '#c0392b',
+            '#16a085',
+            '#2980b9',
+            '#d35400',
+            '#2c3e50',
+            '#f1c40f'
+          ];
+        }
+      };
+    }
+  ]);
   angular.module('Storage', []).factory('LocalStorageService', function () {
     var store = function () {
         try {
@@ -737,12 +917,30 @@
             method: 'GET',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' }
           }).success(function (ratingData, status) {
-            if (ratingData.code == 0 && ratingData.ratings.length) {
+            if (ratingData.code == 0) {
               ratings = JSON.parse(ratingData.ratings);
             }
             callback(ratings);
           }).error(function (ratingData, status) {
             callback(ratings);
+          });
+        },
+        getRatingsWithMovies: function (url, id, cb) {
+          var callback = cb;
+          var ratings = {};
+          var movies = {};
+          $http({
+            url: url + '/ratings/' + id + '?movies=1',
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json; charset=UTF-8' }
+          }).success(function (ratingData, status) {
+            if (ratingData.code == 0) {
+              ratings = JSON.parse(ratingData.ratings);
+              movies = ratingData.movies;
+            }
+            callback(ratings, movies);
+          }).error(function (ratingData, status) {
+            callback(ratings, movies);
           });
         },
         getDefaultRating: function (id) {
@@ -770,18 +968,32 @@
               if (ratingData.code == 0) {
                 callback();
               } else {
-                AlertsService.setAlert('error', ratingData.status);
+                AlertsService.setAlert('error', ratingData.message);
               }
             }).error(function (ratingData, status) {
               AlertsService.setAlert('error', 'Rating failed');
-              console.log(ratingData);
             });
           }
         }
       };
     }
   ]);
+  angular.module('Util', []).factory('UtilityService', [
+    '$http',
+    function ($http) {
+      return {
+        getObjectLength: function (obj) {
+          var length = 0;
+          for (key in obj) {
+            length++;
+          }
+          return length;
+        }
+      };
+    }
+  ]);
   angular.module('templates-app', [
+    'lists/box.tpl.html',
     'lists/lists.tpl.html',
     'movies/movies.tpl.html',
     'ratings/ratings.tpl.html',
@@ -789,10 +1001,16 @@
     'user/anon.tpl.html',
     'user/user.tpl.html'
   ]);
+  angular.module('lists/box.tpl.html', []).run([
+    '$templateCache',
+    function ($templateCache) {
+      $templateCache.put('lists/box.tpl.html', '<div class="list-box popup">\n' + '  <div class="row-fluid">\n' + '    <div class="row-fuild ribbon">\n' + '      <span class="pull-right" ng-click="close()">\n' + '        <i class="icon-remove-sign close-btn"></i>\n' + '      </span>\n' + '    </div>\n' + '    <div class="row-fluid list-box-inner" ng-show="action != \'delete\'">\n' + '      <h5> {{action}} List </h5>\n' + '      <input type="text"  placeholder="Name" ng-model="name">\n' + '      <textarea rows="3"  placeholder="Description" ng-model="description"></textarea>\n' + '      <div class="color-wrap"/>\n' + '        <a class="dropdown-toggle input-type" ng-style="{background : color}">\n' + '          Label Color&nbsp;<i class="icon-collapse"></i>\n' + '        </a>\n' + '        <ul class="dropdown-menu">\n' + '          <li ng-repeat="choice in colors">\n' + '            <a class="color-choice" ng-style="{background : choice}" ng-click="setListColor(choice)"><i class="icon-check" ng-show="choice==color"></i>&nbsp;</a>\n' + '          </li>\n' + '        </ul>\n' + '      </div>\n' + '      <button class="btn btn-success" type="button" ng-click="saveList()" ng-show="action == \'create\'">Create</button>\n' + '      <button class="btn btn-warning" type="button" ng-click="saveList()" ng-show="action == \'edit\'">Save</button>\n' + '    </div>\n' + '    <div class="row-fluid list-box-inner" ng-show="action == \'delete\'">\n' + '      <h5> {{action}} List </h5>\n' + '      <span> Are you sure you want to delete \'{{name}}\'? </span>\n' + '      <button class="btn btn-danger" type="button" ng-click="saveList()" >Delete</button>\n' + '    </div>\n' + '  </div>\n' + '</div>');
+    }
+  ]);
   angular.module('lists/lists.tpl.html', []).run([
     '$templateCache',
     function ($templateCache) {
-      $templateCache.put('lists/lists.tpl.html', '<div class="row-fluid" data-ng-init="init()">\n' + '  Lists\n' + '</div>');
+      $templateCache.put('lists/lists.tpl.html', '<button class="btn btn-success pull-right" type="button" ng-click="openListBox(\'create\', 0)" >Create</button>\n' + '<h3>My Lists</h3>\n' + '<div class="row-fluid list-wrap" data-ng-init="init()">\n' + '  {{message}}\n' + '  <div class="list-result-data row-fluid" ng-repeat="list in lists" >\n' + '    <div class="span2 list-label" ng-style="{background : list.color}">\n' + '      <i class="icon-film span4 offset5"></i>\n' + '    </div>\n' + '    <div class="span7">\n' + '      <h4><a href="#/list/{{list._id}}">{{list.name}}</a></h4>\n' + '      <p>{{list.description}}</p>\n' + '    </div>\n' + '    <div>\n' + '      <button class="btn btn-danger pull-right" type="button" ng-click="openListBox(\'delete\', list._id)" ><i class="icon-remove"></i></button>\n' + '      <button class="btn btn-warning pull-right" type="button" ng-click="openListBox(\'edit\', list._id)" ><i class="icon-edit"></i></button>\n' + '    </div>\n' + '  </div>\n' + '</div>');
     }
   ]);
   angular.module('movies/movies.tpl.html', []).run([
@@ -816,7 +1034,7 @@
   angular.module('user/anon.tpl.html', []).run([
     '$templateCache',
     function ($templateCache) {
-      $templateCache.put('user/anon.tpl.html', '<div class="user-box">\n' + '  <div class="row-fluid">\n' + '    <div class="row-fuild user-ribbon">\n' + '      <span class="pull-right" ng-click="close()">\n' + '        <i class="icon-remove-sign close-btn"></i>\n' + '      </span>\n' + '    </div>\n' + '    <div class="row-fluid user-box-inner">\n' + '      <div class="login-box span4 offset2">\n' + '        <h5>Login</h5>\n' + '        <input type="text" class="span8" placeholder="Username" ng-model="name">\n' + '        <input type="password" class="span8" placeholder="Password" ng-model="pass">\n' + '        <button class="btn span8 btn-warning" type="button" ng-click="login(name, pass)" >Login</button>\n' + '      </div>\n' + '      <div class="reg-box span4 ">\n' + '        <h5>Register</h5>\n' + '        <input type="text" class="span8" placeholder="Username" ng-model="rName">\n' + '        <input type="password" class="span8" placeholder="Password" ng-model="rPass">\n' + '        <input type="password" class="span8" placeholder="Confirm password" ng-model="rcPass">\n' + '        <button class="btn span8 btn-warning" type="button" ng-click="register(rName, rPass,rcPass)">Register</button>\n' + '      </div>\n' + '    </div>\n' + '  </div>\n' + '</div>');
+      $templateCache.put('user/anon.tpl.html', '<div class="user-box popup">\n' + '  <div class="row-fluid">\n' + '    <div class="row-fuild ribbon">\n' + '      <span class="pull-right" ng-click="close()">\n' + '        <i class="icon-remove-sign close-btn"></i>\n' + '      </span>\n' + '    </div>\n' + '    <div class="row-fluid user-box-inner">\n' + '      <div class="login-box span4 offset2">\n' + '        <h5>Login</h5>\n' + '        <input type="text" class="span8" placeholder="Username" ng-model="name" ng-keypress="keypress(\'login\', $event)">\n' + '        <input type="password" class="span8" placeholder="Password" ng-model="pass" ng-keypress="keypress(\'login\', $event)">\n' + '        <button class="btn span8 btn-warning" type="button" ng-click="login(name, pass)" >Login</button>\n' + '      </div>\n' + '      <div class="reg-box span4 ">\n' + '        <h5>Register</h5>\n' + '        <input type="text" class="span8" placeholder="Username" ng-model="rName" ng-keypress="keypress(\'register\', $event)">\n' + '        <input type="password" class="span8" placeholder="Password" ng-model="rPass" ng-keypress="keypress(\'register\', $event)">\n' + '        <input type="password" class="span8" placeholder="Confirm password" ng-model="rcPass" ng-keypress="keypress(\'register\', $event)">\n' + '        <button class="btn span8 btn-warning" type="button" ng-click="register(rName, rPass,rcPass)">Register</button>\n' + '      </div>\n' + '    </div>\n' + '  </div>\n' + '</div>');
     }
   ]);
   angular.module('user/user.tpl.html', []).run([

@@ -1,9 +1,59 @@
-angular.module('templates-app', ['lists/lists.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+angular.module('templates-app', ['lists/box.tpl.html', 'lists/lists.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+
+angular.module("lists/box.tpl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("lists/box.tpl.html",
+    "<div class=\"list-box popup\">\n" +
+    "  <div class=\"row-fluid\">\n" +
+    "    <div class=\"row-fuild ribbon\">\n" +
+    "      <span class=\"pull-right\" ng-click=\"close()\">\n" +
+    "        <i class=\"icon-remove-sign close-btn\"></i>\n" +
+    "      </span>\n" +
+    "    </div>\n" +
+    "    <div class=\"row-fluid list-box-inner\" ng-show=\"action != 'delete'\">\n" +
+    "      <h5> {{action}} List </h5>\n" +
+    "      <input type=\"text\"  placeholder=\"Name\" ng-model=\"name\">\n" +
+    "      <textarea rows=\"3\"  placeholder=\"Description\" ng-model=\"description\"></textarea>\n" +
+    "      <div class=\"color-wrap\"/>\n" +
+    "        <a class=\"dropdown-toggle input-type\" ng-style=\"{background : color}\">\n" +
+    "          Label Color&nbsp;<i class=\"icon-collapse\"></i>\n" +
+    "        </a>\n" +
+    "        <ul class=\"dropdown-menu\">\n" +
+    "          <li ng-repeat=\"choice in colors\">\n" +
+    "            <a class=\"color-choice\" ng-style=\"{background : choice}\" ng-click=\"setListColor(choice)\"><i class=\"icon-check\" ng-show=\"choice==color\"></i>&nbsp;</a>\n" +
+    "          </li>\n" +
+    "        </ul>\n" +
+    "      </div>\n" +
+    "      <button class=\"btn btn-success\" type=\"button\" ng-click=\"saveList()\" ng-show=\"action == 'create'\">Create</button>\n" +
+    "      <button class=\"btn btn-warning\" type=\"button\" ng-click=\"saveList()\" ng-show=\"action == 'edit'\">Save</button>\n" +
+    "    </div>\n" +
+    "    <div class=\"row-fluid list-box-inner\" ng-show=\"action == 'delete'\">\n" +
+    "      <h5> {{action}} List </h5>\n" +
+    "      <span> Are you sure you want to delete '{{name}}'? </span>\n" +
+    "      <button class=\"btn btn-danger\" type=\"button\" ng-click=\"saveList()\" >Delete</button>\n" +
+    "    </div>\n" +
+    "  </div>\n" +
+    "</div>");
+}]);
 
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/lists.tpl.html",
-    "<div class=\"row-fluid\" data-ng-init=\"init()\">\n" +
-    "  Lists\n" +
+    "<button class=\"btn btn-success pull-right\" type=\"button\" ng-click=\"openListBox('create', 0)\" >Create</button>\n" +
+    "<h3>My Lists</h3>\n" +
+    "<div class=\"row-fluid list-wrap\" data-ng-init=\"init()\">\n" +
+    "  {{message}}\n" +
+    "  <div class=\"list-result-data row-fluid\" ng-repeat=\"list in lists\" >\n" +
+    "    <div class=\"span2 list-label\" ng-style=\"{background : list.color}\">\n" +
+    "      <i class=\"icon-film span4 offset5\"></i>\n" +
+    "    </div>\n" +
+    "    <div class=\"span7\">\n" +
+    "      <h4><a href=\"#/list/{{list._id}}\">{{list.name}}</a></h4>\n" +
+    "      <p>{{list.description}}</p>\n" +
+    "    </div>\n" +
+    "    <div>\n" +
+    "      <button class=\"btn btn-danger pull-right\" type=\"button\" ng-click=\"openListBox('delete', list._id)\" ><i class=\"icon-remove\"></i></button>\n" +
+    "      <button class=\"btn btn-warning pull-right\" type=\"button\" ng-click=\"openListBox('edit', list._id)\" ><i class=\"icon-edit\"></i></button>\n" +
+    "    </div>\n" +
+    "  </div>\n" +
     "</div>");
 }]);
 
@@ -184,9 +234,9 @@ angular.module("search/search.tpl.html", []).run(["$templateCache", function($te
 
 angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("user/anon.tpl.html",
-    "<div class=\"user-box\">\n" +
+    "<div class=\"user-box popup\">\n" +
     "  <div class=\"row-fluid\">\n" +
-    "    <div class=\"row-fuild user-ribbon\">\n" +
+    "    <div class=\"row-fuild ribbon\">\n" +
     "      <span class=\"pull-right\" ng-click=\"close()\">\n" +
     "        <i class=\"icon-remove-sign close-btn\"></i>\n" +
     "      </span>\n" +
@@ -194,15 +244,15 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
     "    <div class=\"row-fluid user-box-inner\">\n" +
     "      <div class=\"login-box span4 offset2\">\n" +
     "        <h5>Login</h5>\n" +
-    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"name\">\n" +
-    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"pass\">\n" +
+    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"name\" ng-keypress=\"keypress('login', $event)\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"pass\" ng-keypress=\"keypress('login', $event)\">\n" +
     "        <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"login(name, pass)\" >Login</button>\n" +
     "      </div>\n" +
     "      <div class=\"reg-box span4 \">\n" +
     "        <h5>Register</h5>\n" +
-    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"rName\">\n" +
-    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"rPass\">\n" +
-    "        <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\">\n" +
+    "        <input type=\"text\" class=\"span8\" placeholder=\"Username\" ng-model=\"rName\" ng-keypress=\"keypress('register', $event)\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Password\" ng-model=\"rPass\" ng-keypress=\"keypress('register', $event)\">\n" +
+    "        <input type=\"password\" class=\"span8\" placeholder=\"Confirm password\" ng-model=\"rcPass\" ng-keypress=\"keypress('register', $event)\">\n" +
     "        <button class=\"btn span8 btn-warning\" type=\"button\" ng-click=\"register(rName, rPass,rcPass)\">Register</button>\n" +
     "      </div>\n" +
     "    </div>\n" +
