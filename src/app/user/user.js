@@ -6,7 +6,8 @@ angular.module( 'gojira.user', [
   'Auth',
   'Conf',
   'Alerts',
-  'Rating'
+  'Rating',
+  'List'
 ])
 
 .config(function config( $routeProvider ) {
@@ -26,7 +27,7 @@ angular.module( 'gojira.user', [
     keyboard: true,
     backdropClick: true,
     templateUrl: 'user/anon.tpl.html',
-    controller: 'LoginBoxController',
+    controller: 'LoginBoxCtrl',
     dialogFade: true
   };
 
@@ -100,7 +101,7 @@ $scope.openLoginBox = function(){
 /**
 * Controller for loginbox
 */
-.controller( 'LoginBoxController', function LoginBoxController ( $scope, $http, dialog, AlertsService, RatingService, AuthService, ApiConfigService) {
+.controller( 'LoginBoxCtrl', function LoginBoxCtrl ( $scope, $http, dialog, AlertsService, RatingService, ListService, AuthService, ApiConfigService) {
   $scope.name = '';
   $scope.pass = '';
   $scope.rName = '';
@@ -128,9 +129,12 @@ $scope.openLoginBox = function(){
         user = userData;
         RatingService.getRatings($scope.conf.url.users, user._id, function(ratings){
           user.ratings = ratings || {};
-          AuthService.setUser(user, true);
-          AlertsService.setAlert('info', 'Login successful ');
-          $scope.close();
+          ListService.getAllLists($scope.conf.url.users, user._id, function(lists){
+            user.lists = lists || {};
+            AuthService.setUser(user, true);
+            AlertsService.setAlert('info', 'Login successful ');
+            $scope.close();
+          });
         });
       }else{
         AlertsService.setAlert('error', userData.status);
@@ -169,6 +173,18 @@ $scope.openLoginBox = function(){
       $scope.close();
     });
   };
+  /**
+  * Function to detect enter key
+  */
+  $scope.keypress = function(form, event){
+    if(event.keyCode == 13){
+      if(form == 'login'){
+        $scope.login($scope.name, $scope.pass);
+      }else{
+        $scope.register($scope.rName, $scope.rPass, $scope.rcPass)
+      }
+    }
+  }
 })
 ;
 

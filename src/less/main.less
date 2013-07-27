@@ -39,11 +39,7 @@
 body{
   background: @dark-gray;
   color: @light-gray;
-  font-family: 'Droid Sans', sans-serif;
-}
-
-h1, h2, h3, h4, h5, h6{
-  color: @orange;
+  font-family: @main-font;
 }
 
 a {
@@ -56,19 +52,31 @@ a {
   }
 }
 
+h1, h2, h3, h4, h5, h6{
+  color: @orange;
+  text-transform:capitalize;
+}
+
 button{
   font-weight:bold;
 }
 
-input{
+input, .input-type{
+  height: 25px;
+}
+
+input, textarea, .input-type{
   border: 0px;
   color: @white;
   background-color:@main-nav-back;
-  font-family: "Lato", sans-serif;
   font-size: 14px;
   padding: 8px 5px;
-  height: 25px;
   text-indent: 6px;
+  font-family: @main-font;
+}
+
+.btn{
+  border-radius:0px;
 }
 
 .main-container{
@@ -152,7 +160,6 @@ input{
 
 .rating-box{
   min-width:100px;
-  margin:10px;
   font-weight:bold;
   text-align:center;
   .rating-text{
@@ -289,6 +296,22 @@ footer{
   }
 }
 
+.popup{
+  color:#FFFFFF;
+  background-color: @content-back;
+  box-shadow: 0 0 20px grey,inset 0 0 5px grey;
+  .ribbon{
+    background-color: @yellow;
+    height:20px;
+  }
+  .close-btn{
+    cursor:pointer;
+    color:@red-low;
+    padding-right:5px;
+    font-size:20px;
+  }
+}
+
 /* keyframes */
 @-webkit-keyframes rotate {
   from {-webkit-transform:rotate(0deg);}
@@ -300,3 +323,6 @@ footer{
 @import 'search.less';
 @import 'movies.less';
 @import 'ratings.less';
+@import 'lists.less';
+
+

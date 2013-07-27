@@ -1,3 +1,18 @@
-<div class="row-fluid" data-ng-init="init()">
-  Lists
+<button class="btn btn-success pull-right" type="button" ng-click="openListBox('create', 0)" >Create</button>
+<h3>My Lists</h3>
+<div class="row-fluid list-wrap" data-ng-init="init()">
+  {{message}}
+  <div class="list-result-data row-fluid" ng-repeat="list in lists" >
+    <div class="span2 list-label" ng-style="{background : list.color}">
+      <i class="icon-film span4 offset5"></i>
+    </div>
+    <div class="span7">
+      <h4><a href="#/list/{{list._id}}">{{list.name}}</a></h4>
+      <p>{{list.description}}</p>
+    </div>
+    <div>
+      <button class="btn btn-danger pull-right" type="button" ng-click="openListBox('delete', list._id)" ><i class="icon-remove"></i></button>
+      <button class="btn btn-warning pull-right" type="button" ng-click="openListBox('edit', list._id)" ><i class="icon-edit"></i></button>
+    </div>
+  </div>
 </div>

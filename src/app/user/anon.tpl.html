@@ -1,6 +1,6 @@
-<div class="user-box">
+<div class="user-box popup">
   <div class="row-fluid">
-    <div class="row-fuild user-ribbon">
+    <div class="row-fuild ribbon">
       <span class="pull-right" ng-click="close()">
         <i class="icon-remove-sign close-btn"></i>
       </span>
@@ -8,15 +8,15 @@
     <div class="row-fluid user-box-inner">
       <div class="login-box span4 offset2">
         <h5>Login</h5>
-        <input type="text" class="span8" placeholder="Username" ng-model="name">
-        <input type="password" class="span8" placeholder="Password" ng-model="pass">
+        <input type="text" class="span8" placeholder="Username" ng-model="name" ng-keypress="keypress('login', $event)">
+        <input type="password" class="span8" placeholder="Password" ng-model="pass" ng-keypress="keypress('login', $event)">
         <button class="btn span8 btn-warning" type="button" ng-click="login(name, pass)" >Login</button>
       </div>
       <div class="reg-box span4 ">
         <h5>Register</h5>
-        <input type="text" class="span8" placeholder="Username" ng-model="rName">
-        <input type="password" class="span8" placeholder="Password" ng-model="rPass">
-        <input type="password" class="span8" placeholder="Confirm password" ng-model="rcPass">
+        <input type="text" class="span8" placeholder="Username" ng-model="rName" ng-keypress="keypress('register', $event)">
+        <input type="password" class="span8" placeholder="Password" ng-model="rPass" ng-keypress="keypress('register', $event)">
+        <input type="password" class="span8" placeholder="Confirm password" ng-model="rcPass" ng-keypress="keypress('register', $event)">
         <button class="btn span8 btn-warning" type="button" ng-click="register(rName, rPass,rcPass)">Register</button>
       </div>
     </div>

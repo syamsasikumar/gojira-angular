@@ -24,18 +24,38 @@ angular.module('Rating', ['Alerts'])
       var callback = cb;
       var ratings = {};
       $http({
-        url: url + '/ratings/' + id, 
+        url: url + '/ratings/' + id , 
         method: 'GET',
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(ratingData, status) {
-        if(ratingData.code == 0 && ratingData.ratings.length){
+        if(ratingData.code == 0){
           ratings = JSON.parse(ratingData.ratings);
         }
         callback(ratings);
       }).
       error(function(ratingData, status) {
         callback(ratings);
+      })
+    },
+    getRatingsWithMovies : function(url, id, cb){
+      var callback = cb;
+      var ratings = {};
+      var movies = {};
+      $http({
+        url: url + '/ratings/' + id + '?movies=1', 
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+      }).
+      success(function(ratingData, status) {
+        if(ratingData.code == 0){
+          ratings = JSON.parse(ratingData.ratings);
+          movies = ratingData.movies;
+        }
+        callback(ratings, movies);
+      }).
+      error(function(ratingData, status) {
+        callback(ratings, movies);
       })
     },
     getDefaultRating : function(id){
@@ -57,12 +77,11 @@ angular.module('Rating', ['Alerts'])
           if(ratingData.code == 0){
             callback();
           }else{
-            AlertsService.setAlert('error', ratingData.status);
+            AlertsService.setAlert('error', ratingData.message);
           }
         }).
         error(function(ratingData, status) {
           AlertsService.setAlert('error', 'Rating failed');
-          console.log(ratingData);
         });
       }
     }

@@ -1,0 +1,31 @@
+<div class="list-box popup">
+  <div class="row-fluid">
+    <div class="row-fuild ribbon">
+      <span class="pull-right" ng-click="close()">
+        <i class="icon-remove-sign close-btn"></i>
+      </span>
+    </div>
+    <div class="row-fluid list-box-inner" ng-show="action != 'delete'">
+      <h5> {{action}} List </h5>
+      <input type="text"  placeholder="Name" ng-model="name">
+      <textarea rows="3"  placeholder="Description" ng-model="description"></textarea>
+      <div class="color-wrap"/>
+        <a class="dropdown-toggle input-type" ng-style="{background : color}">
+          Label Color&nbsp;<i class="icon-collapse"></i>
+        </a>
+        <ul class="dropdown-menu">
+          <li ng-repeat="choice in colors">
+            <a class="color-choice" ng-style="{background : choice}" ng-click="setListColor(choice)"><i class="icon-check" ng-show="choice==color"></i>&nbsp;</a>
+          </li>
+        </ul>
+      </div>
+      <button class="btn btn-success" type="button" ng-click="saveList()" ng-show="action == 'create'">Create</button>
+      <button class="btn btn-warning" type="button" ng-click="saveList()" ng-show="action == 'edit'">Save</button>
+    </div>
+    <div class="row-fluid list-box-inner" ng-show="action == 'delete'">
+      <h5> {{action}} List </h5>
+      <span> Are you sure you want to delete '{{name}}'? </span>
+      <button class="btn btn-danger" type="button" ng-click="saveList()" >Delete</button>
+    </div>
+  </div>
+</div>

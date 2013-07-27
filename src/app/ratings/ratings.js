@@ -1,5 +1,4 @@
 angular.module( 'gojira.ratings', [
-  'placeholders',
   'ui.bootstrap',
   'Alerts',
   'Conf',
@@ -66,9 +65,6 @@ angular.module( 'gojira.ratings', [
   $scope.auto = function(){
     if(!$scope.conf.isSet){
       $scope.loadingClass = AlertsService.getLoadingClass();
-      if(!$rootScope.user){
-        AlertsService.setAlert('info', 'Login to rate / review movies');
-      }
       $http.get($scope.conf.url.movies + '/conf', {}, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         }).
@@ -88,23 +84,12 @@ angular.module( 'gojira.ratings', [
     $scope.loadingClass = AlertsService.getLoadingClass();
     $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
-    $http({
-      url: $scope.conf.url.users + '/ratings/' + $rootScope.user._id + '?movies=1', 
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json; charset=UTF-8'}
-    }).
-    success(function(ratingData, status) {
-      if(ratingData.code == 0 && ratingData.ratings.length){
-        $scope.ratings = JSON.parse(ratingData.ratings);
-        angular.forEach($scope.ratings, function(rating, movie){
-          $scope.setDefaultRatings(movie);
-        });
-        $scope.movies = $scope.movieStore = ratingData.movies;
-      }
-      $scope.loaded = true;
-    }).
-    error(function(ratingData, status) {
-      AlertsService.setAlert('error', 'Error fetching your ratings');
+    RatingService.getRatingsWithMovies($scope.conf.url.users, $rootScope.user._id, function(ratings, movies){
+      $scope.ratings = ratings;
+      angular.forEach($scope.ratings, function(rating, movie){
+        $scope.setDefaultRatings(movie);
+      });
+      $scope.movies = $scope.movieStore = movies;
       $scope.loaded = true;
     });
   };
