@@ -105,13 +105,12 @@
   ]).controller('ListBoxCtrl', [
     '$scope',
     '$rootScope',
-    '$location',
     'dialog',
     'AlertsService',
     'ListService',
     'ApiConfigService',
     'AuthService',
-    function ListBoxCtrl($scope, $rootScope, $location, dialog, AlertsService, ListService, ApiConfigService, AuthService) {
+    function ListBoxCtrl($scope, $rootScope, dialog, AlertsService, ListService, ApiConfigService, AuthService) {
       $scope.colors = ListService.getListColors();
       $scope.conf = ApiConfigService.getConf();
       $scope.box = ListService.getListBox();
@@ -152,6 +151,52 @@
         dialog.close();
       };
     }
+  ]).controller('MovieListBoxCtrl', [
+    '$scope',
+    '$rootScope',
+    'dialog',
+    'AlertsService',
+    'ListService',
+    'ApiConfigService',
+    'AuthService',
+    function MovieListBoxCtrl($scope, $rootScope, dialog, AlertsService, ListService, ApiConfigService, AuthService) {
+      $scope.movie = ListService.getMovieBoxData();
+      $scope.lists = $rootScope.user.lists;
+      $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
+      $scope.getDefaultCheckedArray = function () {
+        var checked = [];
+        angular.forEach($scope.lists, function (list, key) {
+          if ($scope.checkMovieInList(list._id)) {
+            checked[list._id] = true;
+          } else {
+            checked[list._id] = false;
+          }
+        });
+        return checked;
+      };
+      $scope.checkMovieInList = function (listId) {
+        if ($scope.movieLists.lists[listId]) {
+          return true;
+        } else {
+          return false;
+        }
+      };
+      $scope.toggleMovieList = function (listId) {
+        if (!$scope.checkMovieInList(listId)) {
+          $rootScope.user.lists[listId]['movies'][$scope.movie.id] = $scope.movie.id;
+          $scope.checked[listId] = true;
+        } else {
+          $scope.checked[listId] = false;
+          delete $rootScope.user.lists[listId]['movies'][$scope.movie.id];
+        }
+        AuthService.setUser($rootScope.user, false);
+        $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
+      };
+      $scope.close = function () {
+        dialog.close();
+      };
+      $scope.checked = $scope.getDefaultCheckedArray();
+    }
   ]);
   ;
   angular.module('gojira.movies', [
@@ -159,7 +204,8 @@
     'Conf',
     'Auth',
     'Rating',
-    'Alerts'
+    'Alerts',
+    'List'
   ]).config([
     '$routeProvider',
     function config($routeProvider) {
@@ -172,18 +218,21 @@
     '$scope',
     '$rootScope',
     '$http',
+    '$dialog',
     '$routeParams',
     'ApiConfigService',
     'RatingService',
     'AlertsService',
     'AuthService',
-    function MoviesCtrl($scope, $rootScope, $http, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService) {
+    'ListService',
+    function MoviesCtrl($scope, $rootScope, $http, $dialog, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService, ListService) {
       $scope.id = $routeParams.id;
       $scope.conf = ApiConfigService.getConf();
       $scope.showAllCast = false;
       $scope.castMarkup = [];
       $scope.loaded = false;
       $scope.loadingClass = AlertsService.getLoadingClass();
+      $scope.userLists = {};
       $scope.setRating = function () {
         var id = $scope.movie.id;
         RatingService.setRating(id, $scope.conf.url.users, AuthService.getUserCookie(), AuthService.getUserToken(), $scope.movie.user_rating, function () {
@@ -231,7 +280,7 @@
           if (!$rootScope.user) {
             AlertsService.setAlert('info', 'Login to rate & review "' + data.title + '"');
           } else {
-            $scope.movie.user_rating = RatingService.getDefaultRating(data.id);
+            $scope.setMovieUserData(data.id);
           }
           $scope.loaded = true;
         }).error(function (data, status) {
@@ -250,12 +299,22 @@
         } else {
           $scope.fetch();
         }
-        $scope.$watch(AuthService.isLoggedIn, function (isLoggedIn) {
-          $scope.isLoggedIn = isLoggedIn;
-          if (isLoggedIn && $scope.movie) {
-            $scope.movie.user_rating = RatingService.getDefaultRating($scope.movie.id);
+        $scope.$watch(AuthService.getUser, function (user) {
+          $scope.isLoggedIn = AuthService.isLoggedIn();
+          if ($scope.isLoggedIn && $scope.movie) {
+            $scope.setMovieUserData($scope.movie.id);
           }
         }, true);
+      };
+      $scope.setMovieUserData = function (id) {
+        $scope.movie.user_rating = RatingService.getDefaultRating(id);
+        $scope.userLists = ListService.getListsForMovie(id);
+      };
+      $scope.openListPopUp = function (movie) {
+        ListService.setMovieBoxData(movie);
+        var d = $dialog.dialog(ListService.getMovieBoxOpts());
+        d.open().then(function (result) {
+        });
       };
     }
   ]);
@@ -358,7 +417,8 @@
     'Conf',
     'Rating',
     'Alerts',
-    'Auth'
+    'Auth',
+    'List'
   ]).config([
     '$routeProvider',
     function config($routeProvider) {
@@ -371,15 +431,18 @@
     '$scope',
     '$rootScope',
     '$http',
+    '$dialog',
     'ApiConfigService',
     'RatingService',
     'AlertsService',
     'AuthService',
-    function SearchCtrl($scope, $rootScope, $http, ApiConfigService, RatingService, AlertsService, AuthService) {
+    'ListService',
+    function SearchCtrl($scope, $rootScope, $http, $dialog, ApiConfigService, RatingService, AlertsService, AuthService, ListService) {
       $scope.search = '';
       $scope.loaded = false;
       $scope.conf = ApiConfigService.getConf();
       $scope.userRatings = {};
+      $scope.userLists = {};
       $scope.loadingClass = AlertsService.getLoadingClass();
       $scope.setDefaultRatings = function (id) {
         $scope.userRatings[id] = RatingService.getDefaultRating(id);
@@ -394,6 +457,21 @@
       };
       $scope.getRatingClass = function (rating) {
         return RatingService.getRatingClass(rating);
+      };
+      $scope.getLists = function (id) {
+        $scope.userLists[id] = ListService.getListsForMovie(id);
+      };
+      $scope.openListPopUp = function (movie) {
+        ListService.setMovieBoxData(movie);
+        var d = $dialog.dialog(ListService.getMovieBoxOpts());
+        d.open().then(function (result) {
+        });
+      };
+      $scope.setUserMovieData = function (movies) {
+        angular.forEach(movies, function (movie, key) {
+          $scope.setDefaultRatings(movie.id);
+          $scope.getLists(movie.id);
+        });
       };
       $scope.auto = function () {
         if (!$scope.conf.isSet) {
@@ -410,12 +488,10 @@
         } else {
           $scope.fetch();
         }
-        $scope.$watch(AuthService.isLoggedIn, function (isLoggedIn) {
-          $scope.isLoggedIn = isLoggedIn;
-          if (isLoggedIn && $scope.movies) {
-            angular.forEach($scope.movies, function (movie, key) {
-              $scope.setDefaultRatings(movie.id);
-            });
+        $scope.$watch(AuthService.getUser, function (user) {
+          $scope.isLoggedIn = AuthService.isLoggedIn();
+          if ($scope.isLoggedIn && $scope.movies) {
+            $scope.setUserMovieData($scope.movies);
           }
         }, true);
       };
@@ -432,9 +508,7 @@
           $scope.loaded = true;
           $scope.status = status;
           if ($scope.isLoggedIn) {
-            angular.forEach(data.results, function (movie, key) {
-              $scope.setDefaultRatings(movie.id);
-            });
+            $scope.setUserMovieData(data.results);
           }
           $scope.movies = data.results;
           if ($scope.search == '') {
@@ -766,6 +840,7 @@
     'AlertsService',
     function ($http, $rootScope, AlertsService) {
       var _box = {};
+      var _movie = {};
       return {
         getListBox: function () {
           return _box;
@@ -838,11 +913,24 @@
             AlertsService.setAlert('error', 'List Operation failed');
           });
         },
+        getListsForMovie: function (id) {
+          var userLists = $rootScope.user.lists;
+          var movieLists = {
+              lists: {},
+              total: 0
+            };
+          for (key in userLists) {
+            var list = userLists[key];
+            if (list['movies'][id]) {
+              movieLists['lists'][list._id] = list;
+              movieLists['total']++;
+            }
+          }
+          return movieLists;
+        },
         addMovieToList: function () {
         },
         deleteMovieFromList: function () {
-        },
-        getListsForMovie: function () {
         },
         getListColors: function () {
           return [
@@ -853,6 +941,22 @@
             '#2c3e50',
             '#f1c40f'
           ];
+        },
+        getMovieBoxOpts: function () {
+          return {
+            backdrop: true,
+            keyboard: true,
+            backdropClick: true,
+            templateUrl: 'lists/movie.tpl.html',
+            controller: 'MovieListBoxCtrl',
+            dialogFade: true
+          };
+        },
+        setMovieBoxData: function (movie) {
+          _movie = movie;
+        },
+        getMovieBoxData: function () {
+          return _movie;
         }
       };
     }
@@ -995,6 +1099,7 @@
   angular.module('templates-app', [
     'lists/box.tpl.html',
     'lists/lists.tpl.html',
+    'lists/movie.tpl.html',
     'movies/movies.tpl.html',
     'ratings/ratings.tpl.html',
     'search/search.tpl.html',
@@ -1013,22 +1118,28 @@
       $templateCache.put('lists/lists.tpl.html', '<button class="btn btn-success pull-right" type="button" ng-click="openListBox(\'create\', 0)" >Create</button>\n' + '<h3>My Lists</h3>\n' + '<div class="row-fluid list-wrap" data-ng-init="init()">\n' + '  {{message}}\n' + '  <div class="list-result-data row-fluid" ng-repeat="list in lists" >\n' + '    <div class="span2 list-label" ng-style="{background : list.color}">\n' + '      <i class="icon-film span4 offset5"></i>\n' + '    </div>\n' + '    <div class="span7">\n' + '      <h4><a href="#/list/{{list._id}}">{{list.name}}</a></h4>\n' + '      <p>{{list.description}}</p>\n' + '    </div>\n' + '    <div>\n' + '      <button class="btn btn-danger pull-right" type="button" ng-click="openListBox(\'delete\', list._id)" ><i class="icon-remove"></i></button>\n' + '      <button class="btn btn-warning pull-right" type="button" ng-click="openListBox(\'edit\', list._id)" ><i class="icon-edit"></i></button>\n' + '    </div>\n' + '  </div>\n' + '</div>');
     }
   ]);
+  angular.module('lists/movie.tpl.html', []).run([
+    '$templateCache',
+    function ($templateCache) {
+      $templateCache.put('lists/movie.tpl.html', '<div class="list-box popup">\n' + '  <div class="row-fluid">\n' + '    <div class="row-fuild ribbon">\n' + '      <span class="pull-right" ng-click="close()">\n' + '        <i class="icon-remove-sign close-btn"></i>\n' + '      </span>\n' + '    </div>\n' + '    <div class="row-fluid movie-list-box-inner">\n' + '      <h5> Add \'{{movie.title}}\' To Lists </h5>\n' + '      <span ng-repeat="list in lists">\n' + '        <div ng-style="{background : list.color}" class="list-wrap span10">\n' + '          <i class="icon-check check" ng-if="checked[list._id]" ng-click="toggleMovieList(list._id)"></i>\n' + '          <i class="icon-check-empty check" ng-if="!checked[list._id]" ng-click="toggleMovieList(list._id)"></i>\n' + '          <span>{{list.name}}</span>\n' + '        </div>\n' + '      </span>\n' + '    </div>\n' + '  </div>\n' + '</div>');
+    }
+  ]);
   angular.module('movies/movies.tpl.html', []).run([
     '$templateCache',
     function ($templateCache) {
-      $templateCache.put('movies/movies.tpl.html', '<div class="row-fluid" ng-style="getBackground(imgUrl, movie.backdrop_path)" class="img-background" data-ng-init="init()">\n' + '  <div class="row-fluid search-results loading-container" ng-hide="loaded">\n' + '    <div class="loader" ng-class="loadingClass"><h4> Loading.. </h4></div>\n' + '  </div>\n' + '  <div class="movie-container" ng-show="loaded">\n' + '    <div class="row-fluid" >\n' + '      <div class="span1">\n' + '        <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" ></img>\n' + '      </div>\n' + '      <div class="span8">\n' + '        <h3>{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</h3>\n' + '          <p ng-if="movie.tagline"> \n' + '            <span class="property"> Tag Line : </span> \n' + '            <i>"{{movie.tagline}}"</i> </p>\n' + '          <p> \n' + '            <span class="property">User Rating : </span>\n' + '            <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title ) \n' + '          </p>\n' + '          <div class="movie-user-rating" ng-if="isLoggedIn" ng-click="setRating()">\n' + '            <span class="property" > Your Rating : </span>\n' + '            <rating value="movie.user_rating" max="10" readonly="false" class="rating user-rating"></rating>\n' + '          </div>\n' + '           <p ng-show="movie.genres">\n' + '             <span class="property">Genres : </span>\n' + '             <span class="genre" ng-repeat="(index,genre) in movie.genres"> {{genre.name}} <span class="sep" ng-show="index < (movie.genres.length -1)"> | </span></span></p>\n' + '       </div>\n' + '       <div class="pull-right rating-box" ng-class="getRatingClass(movie.vote_average)">\n' + '          <div class="rating-text">\n' + '            {{movie.vote_average}} <i class="icon-star"></i>\n' + '          </div>\n' + '          <div class="rating-by">\n' + '            {{movie.vote_count}} users\n' + '          </div>\n' + '       </div>\n' + '       <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(movie.user_rating)" ng-if="isLoggedIn">\n' + '          <div class="rating-text" ng-if="movie.user_rating > 0">\n' + '            {{movie.user_rating}} <i class="icon-star"></i>\n' + '          </div>\n' + '          <div class="rating-text na-text" ng-if="movie.user_rating == 0">\n' + '            N/A\n' + '          </div>\n' + '          <div class="rating-by">\n' + '            You\n' + '          </div>\n' + '       </div>\n' + '    </div>\n' + '    <div class="row-fluid" ng-click="setRating(movie)">\n' + '      <h5>Overview : </h5>\n' + '      <p class="left-padded-content">\n' + '        {{movie.overview}}\n' + '      </p>\n' + '    </div>  \n' + '    <div class="row-fluid">\n' + '      <div class="span6" ng-if="movie.casts.cast">\n' + '        <h5> Casts : </h5>\n' + '        <div class="row-fluid message left-padded-content" ng-show="!showAllCast">\n' + '          Showing top casts. Click <a ng-click="showAllCast = true" >here</a> to show all casts.\n' + '        </div>\n' + '        <div class="row-fluid message left-padded-content" ng-show="showAllCast">\n' + '          Showing all casts. Click <a ng-click="showAllCast = false" >here</a> to show only top casts.\n' + '        </div>\n' + '        <div class="cast-result row-fluid left-padded-content" ng-repeat="(index,cast) in movie.casts.cast">\n' + '          <div class="span1" ng-show="index < 10 || showAllCast">\n' + '            <img ng-src="{{imgUrl}}/w92/{{cast.profile_path}}" ng-if="cast.profile_path" ng-show="cast.profile_path" class="list-img"></img>\n' + '            <i class="icon-question-sign" ng-show="!cast.profile_path"></i>\n' + '          </div>\n' + '          <div class="span11 cast-name" ng-show="index < 10 || showAllCast">\n' + '            <a><span tooltip-placement="right"  tooltip-html-unsafe="{{castMarkup[cast.id]}}" tooltip-trigger="mouseenter" class="cast-desc">{{cast.name}} <i ng-show="cast.character">( {{cast.character}} )</i></span></a>\n' + '          </div>\n' + '        </div>\n' + '      </div>\n' + '      <div class="span6" ng-if="movie.trailers.youtube[0]">\n' + '        <h5>Trailer :</h5>\n' + '        <iframe id="ytplayer" type="text/html" class="span10" src="http://www.youtube.com/embed/{{movie.trailers.youtube[0].source}}" frameborder="0"></iframe> \n' + '      </div>\n' + '    </div>\n' + '    <div class="row-fluid" ng-show="movie.similar_movies.results">\n' + '      <h5>Similar Movies : </h5>\n' + '      <div class="similar-movie-container row-fluid">\n' + '        <div class="span2 movie-leaf" ng-repeat="(index, s_movie) in movie.similar_movies.results">\n' + '          <a href="#/movie/{{s_movie.id}}" ng-show="index < 6">\n' + '            <img ng-src="{{imgUrl}}/w92/{{s_movie.poster_path}}" ng-if="s_movie.poster_path"></img>\n' + '            <h6 >{{s_movie.title}} ( {{s_movie.release_date.substring(0,4)}} )</h6>\n' + '          </a>\n' + '        </div>\n' + '      </div>\n' + '    </div>\n' + '  </div>\n' + '</div>');
+      $templateCache.put('movies/movies.tpl.html', '<div class="row-fluid" ng-style="getBackground(imgUrl, movie.backdrop_path)" class="img-background" data-ng-init="init()">\n' + '  <div class="row-fluid search-results loading-container" ng-hide="loaded">\n' + '    <div class="loader" ng-class="loadingClass"><h4> Loading.. </h4></div>\n' + '  </div>\n' + '  <div class="movie-container" ng-show="loaded">\n' + '    <div class="row-fluid" >\n' + '      <div class="span1">\n' + '        <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" ></img>\n' + '      </div>\n' + '      <div class="span8">\n' + '        <h3>{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</h3>\n' + '          <p ng-if="movie.tagline"> \n' + '            <span class="property"> Tag Line : </span> \n' + '            <i>"{{movie.tagline}}"</i> </p>\n' + '          <p> \n' + '            <span class="property">User Rating : </span>\n' + '            <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating>  ( {{movie.vote_average}}/10 | <b>{{movie.vote_count}}</b> users reviewed this title ) \n' + '          </p>\n' + '          <div class="movie-user-rating" ng-if="isLoggedIn" ng-click="setRating()">\n' + '            <span class="property" > Your Rating : </span>\n' + '            <rating value="movie.user_rating" max="10" readonly="false" class="rating user-rating"></rating>\n' + '          </div>\n' + '          <div class="row-fluid movie-list-field" ng-if="isLoggedIn">\n' + '            <span class="property" > Lists : </span>\n' + '            <span class="movie-lists-none" ng-if="userLists[\'total\'] == 0">None</span>\n' + '            <span class="movie-lists-all" ng-if="userLists[\'total\'] > 0">\n' + '              <span class="list-wrap" ng-repeat="list in userLists[\'lists\']">\n' + '                <span ng-style="{background : list.color}" class="movie-list">\n' + '                  <a href="#/list/{{list._id}}">{{list.name}}</a>\n' + '                </span>\n' + '              </span>\n' + '            </span>\n' + '            |\n' + '            <span class="add" ng-click="openListPopUp(movie)"><i class="icon-plus"></i> Add</span>\n' + '          </div>\n' + '           <p ng-show="movie.genres" class="movie-genre">\n' + '             <span class="property">Genres : </span>\n' + '             <span class="genre" ng-repeat="(index,genre) in movie.genres"> {{genre.name}} <span class="sep" ng-show="index < (movie.genres.length -1)"> | </span></span></p>\n' + '       </div>\n' + '       <div class="pull-right rating-box" ng-class="getRatingClass(movie.vote_average)">\n' + '          <div class="rating-text">\n' + '            {{movie.vote_average}} <i class="icon-star"></i>\n' + '          </div>\n' + '          <div class="rating-by">\n' + '            {{movie.vote_count}} users\n' + '          </div>\n' + '       </div>\n' + '       <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(movie.user_rating)" ng-if="isLoggedIn">\n' + '          <div class="rating-text" ng-if="movie.user_rating > 0">\n' + '            {{movie.user_rating}} <i class="icon-star"></i>\n' + '          </div>\n' + '          <div class="rating-text na-text" ng-if="movie.user_rating == 0">\n' + '            N/A\n' + '          </div>\n' + '          <div class="rating-by">\n' + '            You\n' + '          </div>\n' + '       </div>\n' + '    </div>\n' + '    <div class="row-fluid" ng-click="setRating(movie)">\n' + '      <h5>Overview : </h5>\n' + '      <p class="left-padded-content">\n' + '        {{movie.overview}}\n' + '      </p>\n' + '    </div>  \n' + '    <div class="row-fluid">\n' + '      <div class="span6" ng-if="movie.casts.cast">\n' + '        <h5> Casts : </h5>\n' + '        <div class="row-fluid message left-padded-content" ng-show="!showAllCast">\n' + '          Showing top casts. Click <a ng-click="showAllCast = true" >here</a> to show all casts.\n' + '        </div>\n' + '        <div class="row-fluid message left-padded-content" ng-show="showAllCast">\n' + '          Showing all casts. Click <a ng-click="showAllCast = false" >here</a> to show only top casts.\n' + '        </div>\n' + '        <div class="cast-result row-fluid left-padded-content" ng-repeat="(index,cast) in movie.casts.cast">\n' + '          <div class="span1" ng-show="index < 10 || showAllCast">\n' + '            <img ng-src="{{imgUrl}}/w92/{{cast.profile_path}}" ng-if="cast.profile_path" ng-show="cast.profile_path" class="list-img"></img>\n' + '            <i class="icon-question-sign" ng-show="!cast.profile_path"></i>\n' + '          </div>\n' + '          <div class="span11 cast-name" ng-show="index < 10 || showAllCast">\n' + '            <a><span tooltip-placement="right"  tooltip-html-unsafe="{{castMarkup[cast.id]}}" tooltip-trigger="mouseenter" class="cast-desc">{{cast.name}} <i ng-show="cast.character">( {{cast.character}} )</i></span></a>\n' + '          </div>\n' + '        </div>\n' + '      </div>\n' + '      <div class="span6" ng-if="movie.trailers.youtube[0]">\n' + '        <h5>Trailer :</h5>\n' + '        <iframe id="ytplayer" type="text/html" class="span10" src="http://www.youtube.com/embed/{{movie.trailers.youtube[0].source}}" frameborder="0"></iframe> \n' + '      </div>\n' + '    </div>\n' + '    <div class="row-fluid" ng-show="movie.similar_movies.results">\n' + '      <h5>Similar Movies : </h5>\n' + '      <div class="similar-movie-container row-fluid">\n' + '        <div class="span2 movie-leaf" ng-repeat="(index, s_movie) in movie.similar_movies.results">\n' + '          <a href="#/movie/{{s_movie.id}}" ng-show="index < 6">\n' + '            <img ng-src="{{imgUrl}}/w92/{{s_movie.poster_path}}" ng-if="s_movie.poster_path"></img>\n' + '            <h6 >{{s_movie.title}} ( {{s_movie.release_date.substring(0,4)}} )</h6>\n' + '          </a>\n' + '        </div>\n' + '      </div>\n' + '    </div>\n' + '  </div>\n' + '</div>');
     }
   ]);
   angular.module('ratings/ratings.tpl.html', []).run([
     '$templateCache',
     function ($templateCache) {
-      $templateCache.put('ratings/ratings.tpl.html', '<div class="row-fluid search-input" data-ng-init="init()">\n' + '  <input type="text" class="span10 offset1" placeholder="Type to search for movies you rated" ng-model="filter" ng-keyup="filterMovie()"/>\n' + '</div>\n' + '<h3>Your Ratings</h3>\n' + '<div class="row-fluid search-results loading-container" ng-hide="loaded">\n' + '  <div class="loader" ng-class="loadingClass"><h4> Loading.. </h4></div>\n' + '</div>\n' + '<div class="row-fluid search-results" ng-show="loaded && ratings">\n' + '  <div class="list-result row-fluid" ng-repeat="movie in movies" >\n' + '    <div class="span1">\n' + '      <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img"></img>\n' + '    </div>\n' + '    <div class="span8">\n' + '      <h4><a href="#/movie/{{movie.id}}">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n' + '        <div class="row-fluid movie-list-field"  ng-click="setRating(movie.id)">\n' + '          <span class="property" > Your Rating : </span>\n' + '          <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>\n' + '        </div>\n' + '     </div>\n' + '     <div class="pull-right rating-box" ng-class="getRatingClass(userRatings[movie.id])" >\n' + '        <div class="rating-text-user" ng-if="userRatings[movie.id] > 0">\n' + '          {{userRatings[movie.id]}} <i class="icon-star"></i>\n' + '        </div>\n' + '     </div>\n' + '  </div>\n' + '</div>\n' + '<div class="row-fluid search-results" ng-show="!ratings && loaded">\n' + '  No ratings found.\n' + '</div>\n' + '');
+      $templateCache.put('ratings/ratings.tpl.html', '<div class="row-fluid search-input" data-ng-init="init()">\n' + '  <input type="text" class="span10 offset1" placeholder="Type to search for movies you rated" ng-model="filter" ng-keyup="filterMovie()"/>\n' + '</div>\n' + '<h3>Your Ratings</h3>\n' + '<div class="row-fluid search-results loading-container" ng-hide="loaded">\n' + '  <div class="loader" ng-class="loadingClass"><h4> Loading.. </h4></div>\n' + '</div>\n' + '<div class="row-fluid search-results" ng-show="loaded && ratings">\n' + '  <div class="list-result row-fluid" ng-repeat="movie in movies" >\n' + '    <div class="span1">\n' + '      <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img-rating"></img>\n' + '    </div>\n' + '    <div class="span8">\n' + '      <h4><a href="#/movie/{{movie.id}}">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n' + '        <div class="row-fluid movie-list-field"  ng-click="setRating(movie.id)">\n' + '          <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>\n' + '        </div>\n' + '     </div>\n' + '     <div class="pull-right rating-box" ng-class="getRatingClass(userRatings[movie.id])" >\n' + '        <div class="rating-text-user" ng-if="userRatings[movie.id] > 0">\n' + '          {{userRatings[movie.id]}} <i class="icon-star"></i>\n' + '        </div>\n' + '     </div>\n' + '  </div>\n' + '</div>\n' + '<div class="row-fluid search-results" ng-show="!ratings && loaded">\n' + '  No ratings found.\n' + '</div>\n' + '');
     }
   ]);
   angular.module('search/search.tpl.html', []).run([
     '$templateCache',
     function ($templateCache) {
-      $templateCache.put('search/search.tpl.html', '<div class="row-fluid search-input" data-ng-init="auto()">\n' + '  <input type="text" class="span10 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>\n' + '</div>\n' + '<h3>{{listTitle}}</h3>\n' + '<div class="row-fluid search-results loading-container" ng-hide="loaded">\n' + '  <div class="loader" ng-class="loadingClass"><h4> Loading.. </h4></div>\n' + '</div>\n' + '<div class="row-fluid search-results" ng-show="loaded">\n' + '  <div class="list-result row-fluid" ng-repeat="movie in movies" >\n' + '    <div class="span1">\n' + '      <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img"></img>\n' + '    </div>\n' + '    <div class="span8">\n' + '      <h4><a href="#/movie/{{movie.id}}">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n' + '        <div class="row-fluid movie-list-field">\n' + '          <span class="property"> User Rating : </span>\n' + '          <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating><br/>\n' + '        </div>\n' + '        <div class="row-fluid movie-list-field" ng-if="isLoggedIn" ng-click="setRating(movie.id)">\n' + '          <span class="property" > Your Rating : </span>\n' + '          <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>\n' + '        </div>\n' + '     </div>\n' + '     <div class="pull-right rating-box" ng-class="getRatingClass(movie.vote_average)">\n' + '        <div class="rating-text">\n' + '          {{movie.vote_average}} <i class="icon-star"></i>\n' + '        </div>\n' + '        <div class="rating-by">\n' + '          {{movie.vote_count}} users\n' + '        </div>\n' + '     </div>\n' + '     <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(userRatings[movie.id])" ng-if="isLoggedIn">\n' + '        <div class="rating-text" ng-if="userRatings[movie.id] > 0">\n' + '          {{userRatings[movie.id]}} <i class="icon-star"></i>\n' + '        </div>\n' + '        <div class="rating-text na-text" ng-if="userRatings[movie.id] == 0">\n' + '          N/A\n' + '        </div>\n' + '        <div class="rating-by">\n' + '          You\n' + '        </div>\n' + '     </div>\n' + '  </div>\n' + '</div>');
+      $templateCache.put('search/search.tpl.html', '<div class="row-fluid search-input" data-ng-init="auto()">\n' + '  <input type="text" class="span10 offset1" placeholder="Type to search for movies" ng-model="search" ng-keyup="auto()"/>\n' + '</div>\n' + '<h3>{{listTitle}}</h3>\n' + '<div class="row-fluid search-results loading-container" ng-hide="loaded">\n' + '  <div class="loader" ng-class="loadingClass"><h4> Loading.. </h4></div>\n' + '</div>\n' + '<div class="row-fluid search-results" ng-show="loaded">\n' + '  <div class="list-result row-fluid" ng-repeat="movie in movies" >\n' + '    <div class="span1">\n' + '      <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img"></img>\n' + '    </div>\n' + '    <div class="span8">\n' + '      <h4><a href="#/movie/{{movie.id}}">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n' + '        <div class="row-fluid movie-list-field">\n' + '          <span class="property"> Rating (Users) : </span>\n' + '          <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating><br/>\n' + '        </div>\n' + '        <div class="row-fluid movie-list-field" ng-if="isLoggedIn" ng-click="setRating(movie.id)">\n' + '          <span class="property" > Rating (You) : </span>\n' + '          <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>\n' + '        </div>\n' + '        <div class="row-fluid movie-list-field" ng-if="isLoggedIn">\n' + '          <span class="property" > Lists : </span>\n' + '          <span class="movie-lists-none" ng-if="userLists[movie.id][\'total\'] == 0">None</span>\n' + '          <span class="movie-lists-all" ng-if="userLists[movie.id][\'total\'] > 0">\n' + '            <span class="list-wrap" ng-repeat="list in userLists[movie.id][\'lists\']">\n' + '              <span ng-style="{background : list.color}" class="movie-list">\n' + '                <a href="#/list/{{list._id}}">{{list.name}}</a>\n' + '              </span>\n' + '            </span>\n' + '          </span>\n' + '          |\n' + '          <span class="add" ng-click="openListPopUp(movie)"><i class="icon-plus"></i> Add</span>\n' + '        </div>\n' + '     </div>\n' + '     <div class="span3">\n' + '       <div class="row-fuild">\n' + '         <div class="rating-box pull-right" ng-class="getRatingClass(movie.vote_average)">\n' + '            <div class="rating-text">\n' + '              {{movie.vote_average}} <i class="icon-star"></i>\n' + '            </div>\n' + '            <div class="rating-by">\n' + '              {{movie.vote_count}} users\n' + '            </div>\n' + '         </div>\n' + '         <div class="rating-box ratings-box-user pull-right" ng-class="getRatingClass(userRatings[movie.id])" ng-if="isLoggedIn">\n' + '            <div class="rating-text" ng-if="userRatings[movie.id] > 0">\n' + '              {{userRatings[movie.id]}} <i class="icon-star"></i>\n' + '            </div>\n' + '            <div class="rating-text na-text" ng-if="userRatings[movie.id] == 0">\n' + '              N/A\n' + '            </div>\n' + '            <div class="rating-by">\n' + '              You\n' + '            </div>\n' + '         </div>\n' + '      </div>\n' + '    </div>\n' + '  </div>\n' + '</div>');
     }
   ]);
   angular.module('user/anon.tpl.html', []).run([
