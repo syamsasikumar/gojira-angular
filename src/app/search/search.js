@@ -3,7 +3,8 @@ angular.module( 'gojira.search', [
   'Conf',
   'Rating',
   'Alerts',
-  'Auth'
+  'Auth',
+  'List'
 ])
 
 .config(function config( $routeProvider ) {
@@ -15,11 +16,12 @@ angular.module( 'gojira.search', [
 /**
 * Controller for search page
 */
-.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, ApiConfigService, RatingService, AlertsService, AuthService ) {
+.controller( 'SearchCtrl', function SearchCtrl( $scope, $rootScope, $http, $dialog, ApiConfigService, RatingService, AlertsService, AuthService, ListService ) {
   $scope.search = '';
   $scope.loaded = false;
   $scope.conf = ApiConfigService.getConf();
   $scope.userRatings = {};
+  $scope.userLists = {};
   $scope.loadingClass = AlertsService.getLoadingClass();
   /**
   * If no rating available sets to 0
@@ -38,12 +40,35 @@ angular.module( 'gojira.search', [
       AuthService.setUser($rootScope.user, false);
     });
   }
-
   /**
   * Calls utility method to get rating style
   */
   $scope.getRatingClass = function(rating){
     return RatingService.getRatingClass(rating);
+  }
+  /** 
+  * Gets movie lists
+  */
+  $scope.getLists = function(id){
+    $scope.userLists[id] = ListService.getListsForMovie(id);
+  }
+  /**
+  * Add List popup
+  */
+  $scope.openListPopUp = function(movie){
+    ListService.setMovieBoxData(movie);
+    var d = $dialog.dialog(ListService.getMovieBoxOpts());
+    d.open().then(function(result){
+    });
+  }
+  /**
+  * Set data related to user
+  */
+  $scope.setUserMovieData = function(movies){
+    angular.forEach(movies, function(movie, key){
+      $scope.setDefaultRatings(movie.id);
+      $scope.getLists(movie.id);
+    });
   }
   /**
   * Called on page load
@@ -68,12 +93,10 @@ angular.module( 'gojira.search', [
     }else{
       $scope.fetch();
     }
-    $scope.$watch( AuthService.isLoggedIn, function(isLoggedIn){
-      $scope.isLoggedIn = isLoggedIn;
-      if(isLoggedIn && $scope.movies){
-        angular.forEach($scope.movies, function(movie, key){
-          $scope.setDefaultRatings(movie.id);
-        });
+    $scope.$watch( AuthService.getUser, function(user){
+      $scope.isLoggedIn = AuthService.isLoggedIn();
+      if($scope.isLoggedIn && $scope.movies){
+        $scope.setUserMovieData($scope.movies);
       }
     }, true);
   };
@@ -96,9 +119,7 @@ angular.module( 'gojira.search', [
         $scope.loaded = true;
         $scope.status = status;
         if($scope.isLoggedIn){
-          angular.forEach(data.results, function(movie, key){
-            $scope.setDefaultRatings(movie.id);
-          });
+          $scope.setUserMovieData(data.results);
         }
         $scope.movies = data.results;
         if($scope.search == ''){

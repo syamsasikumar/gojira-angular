@@ -8,12 +8,11 @@
 <div class="row-fluid search-results" ng-show="loaded && ratings">
   <div class="list-result row-fluid" ng-repeat="movie in movies" >
     <div class="span1">
-      <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img"></img>
+      <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img-rating"></img>
     </div>
     <div class="span8">
       <h4><a href="#/movie/{{movie.id}}">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>
         <div class="row-fluid movie-list-field"  ng-click="setRating(movie.id)">
-          <span class="property" > Your Rating : </span>
           <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>
         </div>
      </div>

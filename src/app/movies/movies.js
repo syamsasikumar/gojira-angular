@@ -3,7 +3,8 @@ angular.module( 'gojira.movies', [
   'Conf',
   'Auth',
   'Rating',
-  'Alerts'
+  'Alerts',
+  'List'
 ])
 
 .config(function config( $routeProvider ) {
@@ -15,13 +16,14 @@ angular.module( 'gojira.movies', [
 /**
 * Controller for movie detail page
 */
-.controller( 'MoviesCtrl', function MoviesCtrl( $scope, $rootScope, $http, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService ) {
+.controller( 'MoviesCtrl', function MoviesCtrl( $scope, $rootScope, $http, $dialog, $routeParams, ApiConfigService, RatingService, AlertsService, AuthService, ListService ) {
   $scope.id = $routeParams.id;
   $scope.conf = ApiConfigService.getConf();
   $scope.showAllCast = false;
   $scope.castMarkup = [];
   $scope.loaded = false;
   $scope.loadingClass = AlertsService.getLoadingClass();
+  $scope.userLists = {};
   
   /**
   * Sets ratings
@@ -100,7 +102,7 @@ angular.module( 'gojira.movies', [
       if(!$rootScope.user){
         AlertsService.setAlert('info', 'Login to rate & review "' + data.title + '"');
       }else{
-        $scope.movie.user_rating = RatingService.getDefaultRating(data.id);
+        $scope.setMovieUserData(data.id);
       }
       $scope.loaded = true;
     }).
@@ -128,11 +130,24 @@ angular.module( 'gojira.movies', [
     }else{
       $scope.fetch();
     }
-    $scope.$watch( AuthService.isLoggedIn, function(isLoggedIn){
-      $scope.isLoggedIn = isLoggedIn;
-      if(isLoggedIn && $scope.movie){
-        $scope.movie.user_rating = RatingService.getDefaultRating($scope.movie.id);
+    $scope.$watch( AuthService.getUser, function(user){
+      $scope.isLoggedIn = AuthService.isLoggedIn();
+      if($scope.isLoggedIn && $scope.movie){
+        $scope.setMovieUserData($scope.movie.id);
       }
     }, true);
+  }
+  $scope.setMovieUserData = function(id){
+    $scope.movie.user_rating = RatingService.getDefaultRating(id);
+    $scope.userLists = ListService.getListsForMovie(id);
+  }
+  /**
+  * Add List popup
+  */
+  $scope.openListPopUp = function(movie){
+    ListService.setMovieBoxData(movie);
+    var d = $dialog.dialog(ListService.getMovieBoxOpts());
+    d.open().then(function(result){
+    });
   }
 });

@@ -20,7 +20,20 @@
             <span class="property" > Your Rating : </span>
             <rating value="movie.user_rating" max="10" readonly="false" class="rating user-rating"></rating>
           </div>
-           <p ng-show="movie.genres">
+          <div class="row-fluid movie-list-field" ng-if="isLoggedIn">
+            <span class="property" > Lists : </span>
+            <span class="movie-lists-none" ng-if="userLists['total'] == 0">None</span>
+            <span class="movie-lists-all" ng-if="userLists['total'] > 0">
+              <span class="list-wrap" ng-repeat="list in userLists['lists']">
+                <span ng-style="{background : list.color}" class="movie-list">
+                  <a href="#/list/{{list._id}}">{{list.name}}</a>
+                </span>
+              </span>
+            </span>
+            |
+            <span class="add" ng-click="openListPopUp(movie)"><i class="icon-plus"></i> Add</span>
+          </div>
+           <p ng-show="movie.genres" class="movie-genre">
              <span class="property">Genres : </span>
              <span class="genre" ng-repeat="(index,genre) in movie.genres"> {{genre.name}} <span class="sep" ng-show="index < (movie.genres.length -1)"> | </span></span></p>
        </div>

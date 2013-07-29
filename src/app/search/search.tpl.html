@@ -13,32 +13,49 @@
     <div class="span8">
       <h4><a href="#/movie/{{movie.id}}">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>
         <div class="row-fluid movie-list-field">
-          <span class="property"> User Rating : </span>
+          <span class="property"> Rating (Users) : </span>
           <rating value="movie.vote_average" max="10" readonly="true" class="rating"></rating><br/>
         </div>
         <div class="row-fluid movie-list-field" ng-if="isLoggedIn" ng-click="setRating(movie.id)">
-          <span class="property" > Your Rating : </span>
+          <span class="property" > Rating (You) : </span>
           <rating value="userRatings[movie.id]" max="10" readonly="false" class="rating user-rating"></rating>
         </div>
-     </div>
-     <div class="pull-right rating-box" ng-class="getRatingClass(movie.vote_average)">
-        <div class="rating-text">
-          {{movie.vote_average}} <i class="icon-star"></i>
-        </div>
-        <div class="rating-by">
-          {{movie.vote_count}} users
-        </div>
-     </div>
-     <div class="pull-right rating-box ratings-box-user" ng-class="getRatingClass(userRatings[movie.id])" ng-if="isLoggedIn">
-        <div class="rating-text" ng-if="userRatings[movie.id] > 0">
-          {{userRatings[movie.id]}} <i class="icon-star"></i>
-        </div>
-        <div class="rating-text na-text" ng-if="userRatings[movie.id] == 0">
-          N/A
-        </div>
-        <div class="rating-by">
-          You
+        <div class="row-fluid movie-list-field" ng-if="isLoggedIn">
+          <span class="property" > Lists : </span>
+          <span class="movie-lists-none" ng-if="userLists[movie.id]['total'] == 0">None</span>
+          <span class="movie-lists-all" ng-if="userLists[movie.id]['total'] > 0">
+            <span class="list-wrap" ng-repeat="list in userLists[movie.id]['lists']">
+              <span ng-style="{background : list.color}" class="movie-list">
+                <a href="#/list/{{list._id}}">{{list.name}}</a>
+              </span>
+            </span>
+          </span>
+          |
+          <span class="add" ng-click="openListPopUp(movie)"><i class="icon-plus"></i> Add</span>
         </div>
      </div>
+     <div class="span3">
+       <div class="row-fuild">
+         <div class="rating-box pull-right" ng-class="getRatingClass(movie.vote_average)">
+            <div class="rating-text">
+              {{movie.vote_average}} <i class="icon-star"></i>
+            </div>
+            <div class="rating-by">
+              {{movie.vote_count}} users
+            </div>
+         </div>
+         <div class="rating-box ratings-box-user pull-right" ng-class="getRatingClass(userRatings[movie.id])" ng-if="isLoggedIn">
+            <div class="rating-text" ng-if="userRatings[movie.id] > 0">
+              {{userRatings[movie.id]}} <i class="icon-star"></i>
+            </div>
+            <div class="rating-text na-text" ng-if="userRatings[movie.id] == 0">
+              N/A
+            </div>
+            <div class="rating-by">
+              You
+            </div>
+         </div>
+      </div>
+    </div>
   </div>
 </div>

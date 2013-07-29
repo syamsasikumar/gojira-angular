@@ -57,7 +57,7 @@ angular.module( 'gojira.lists', [
   };
 })
 
-.controller( 'ListBoxCtrl', function ListBoxCtrl( $scope, $rootScope, $location, dialog, AlertsService, ListService, ApiConfigService, AuthService ) {
+.controller( 'ListBoxCtrl', function ListBoxCtrl( $scope, $rootScope, dialog, AlertsService, ListService, ApiConfigService, AuthService ) {
   $scope.colors = ListService.getListColors();
   $scope.conf = ApiConfigService.getConf();
   $scope.box = ListService.getListBox();
@@ -105,4 +105,48 @@ angular.module( 'gojira.lists', [
     dialog.close();
   }
 })
+.controller( 'MovieListBoxCtrl', function MovieListBoxCtrl( $scope, $rootScope, dialog, AlertsService, ListService, ApiConfigService, AuthService ) {
+  $scope.movie = ListService.getMovieBoxData();
+  $scope.lists = $rootScope.user.lists;
+  $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
+
+  $scope.getDefaultCheckedArray = function(){
+    var checked = [];
+    angular.forEach($scope.lists, function(list, key){
+      if($scope.checkMovieInList(list._id)){
+        checked[list._id] = true;
+      }else{
+        checked[list._id] = false;
+      }
+    });
+    return checked;
+  };
+
+  $scope.checkMovieInList = function(listId){
+    if($scope.movieLists.lists[listId]){
+      return true;
+    }else{
+      return false;
+    }
+  };
+
+  $scope.toggleMovieList = function(listId){
+    if(!$scope.checkMovieInList(listId)){
+      $rootScope.user.lists[listId]['movies'][$scope.movie.id] = $scope.movie.id;
+      $scope.checked[listId] = true;
+    }else{
+      $scope.checked[listId] = false;
+      delete $rootScope.user.lists[listId]['movies'][$scope.movie.id];
+    }
+    AuthService.setUser($rootScope.user, false);
+    $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
+  };
+
+  $scope.close = function(){
+    dialog.close();
+  };
+
+  $scope.checked = $scope.getDefaultCheckedArray();
+
+});
 ;

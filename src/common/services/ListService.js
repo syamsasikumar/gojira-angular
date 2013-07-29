@@ -1,6 +1,7 @@
 angular.module('List', ['Alerts'])
 .factory('ListService', function($http, $rootScope, AlertsService){
   var _box = {};
+  var _movie= {};
   return {
     getListBox: function(){
       return _box;
@@ -72,17 +73,45 @@ angular.module('List', ['Alerts'])
         AlertsService.setAlert('error', 'List Operation failed');
       });
     },
+    getListsForMovie: function(id){
+      var userLists = $rootScope.user.lists;
+      var movieLists = { 
+        lists:{},
+        total: 0
+      };
+      for(key in userLists){
+        var list = userLists[key];
+        if(list['movies'][id]){
+          movieLists['lists'][list._id] = list;
+          movieLists['total']++;
+        }
+      }
+      return movieLists;
+    },
     addMovieToList: function(){
 
     },
     deleteMovieFromList: function(){
 
     },
-    getListsForMovie: function(){
-
-    },
     getListColors: function(){
       return ['#c0392b', '#16a085', '#2980b9', '#d35400', '#2c3e50', '#f1c40f'];
+    },
+    getMovieBoxOpts: function(){
+      return {
+        backdrop: true,
+        keyboard: true,
+        backdropClick: true,
+        templateUrl: 'lists/movie.tpl.html',
+        controller: 'MovieListBoxCtrl',
+        dialogFade: true
+      };
+    },
+    setMovieBoxData: function(movie){
+      _movie = movie;
+    },
+    getMovieBoxData: function(){
+      return _movie;
     }
   };
 });
