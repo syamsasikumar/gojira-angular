@@ -66,6 +66,10 @@ angular.module( 'gojira.lists', [
     controller: 'ListsCtrl',
     templateUrl: 'lists/lists.tpl.html'
   });
+  $routeProvider.when( '/list/:id', {
+    controller: 'ListCtrl',
+    templateUrl: 'lists/list.tpl.html'
+  });
 })
 /**
 * Controller for my lists page
@@ -136,9 +140,6 @@ angular.module( 'gojira.lists', [
     var list = {_id: $scope._id, name:$scope.name, description:$scope.description, color:$scope.color, movies: $scope.movies};
     if($scope.action == 'create' || $scope.action == 'edit'){
       ListService.saveList(
-        $rootScope.user._id, 
-        AuthService.getUserToken(),
-        $scope.conf.url.users,
         list,
         function(id){
           list._id = id;
@@ -148,9 +149,6 @@ angular.module( 'gojira.lists', [
       });
     }else if($scope.action == 'delete'){
       ListService.deleteList(
-        $rootScope.user._id, 
-        AuthService.getUserToken(),
-        $scope.conf.url.users,
         list._id,
         function(id){
           delete $rootScope.user.lists[id];
@@ -165,10 +163,13 @@ angular.module( 'gojira.lists', [
   $scope.movie = ListService.getMovieBoxData();
   $scope.lists = $rootScope.user.lists;
   $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
+  $scope.conf = ApiConfigService.getConf();
 
   $scope.getDefaultCheckedArray = function(){
     var checked = [];
+    $scope.none = true;
     angular.forEach($scope.lists, function(list, key){
+      $scope.none = false;
       if($scope.checkMovieInList(list._id)){
         checked[list._id] = true;
       }else{
@@ -188,22 +189,192 @@ angular.module( 'gojira.lists', [
 
   $scope.toggleMovieList = function(listId){
     if(!$scope.checkMovieInList(listId)){
-      $rootScope.user.lists[listId]['movies'][$scope.movie.id] = $scope.movie.id;
-      $scope.checked[listId] = true;
+      ListService.addMovieToList(
+        $rootScope.user.lists[listId], 
+        $scope.movie.id,
+        function(){
+          $rootScope.user.lists[listId]['movies'][$scope.movie.id] = $scope.movie.id;
+          $scope.checked[listId] = true;
+          AuthService.setUser($rootScope.user, false);
+          $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
+        });
     }else{
-      $scope.checked[listId] = false;
-      delete $rootScope.user.lists[listId]['movies'][$scope.movie.id];
+      ListService.deleteMovieFromList(
+        listId, 
+        $scope.movie.id,
+        function(){
+          $scope.checked[listId] = false;
+          delete $rootScope.user.lists[listId]['movies'][$scope.movie.id];
+          AuthService.setUser($rootScope.user, false);
+          $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
+        });
     }
-    AuthService.setUser($rootScope.user, false);
-    $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
   };
 
   $scope.close = function(){
     dialog.close();
   };
 
-  $scope.checked = $scope.getDefaultCheckedArray();
+  $scope.init = function(){
+    $scope.checked = $scope.getDefaultCheckedArray();
+  }
 
+})
+.controller( 'ListCtrl', function ListCtrl( $scope, $rootScope, $location, $routeParams, $http, $dialog, $timeout, AlertsService, ListService, ApiConfigService, AuthService ) {
+  $scope.id = $routeParams.id;
+  $scope.conf = ApiConfigService.getConf();
+  $scope.loadingClass = AlertsService.getLoadingClass();
+  $scope.loaded = false;
+  $scope.filter = "";
+  $scope.dialogOpts = {
+    backdrop: true,
+    keyboard: true,
+    backdropClick: true,
+    templateUrl: 'lists/add.tpl.html',
+    controller: 'ListAddBoxCtrl',
+    dialogFade: true
+  };
+
+  /**
+  * Redirect if not logged in
+  */
+  $scope.init = function(){
+    if(!$rootScope.user){
+      AlertsService.setAlert('error', 'You should be logged in to access this list page');
+      $location.path('/');
+    }else{
+      $scope.auto();
+      $scope.$watch( AuthService.getUser, function(user){
+        $timeout(function(){$scope.fetch()}, 2000);
+      });
+    }
+  };
+  /**
+  * Called on page load
+  */
+  $scope.auto = function(){
+    if(!$scope.conf.isSet){
+      $scope.loadingClass = AlertsService.getLoadingClass();
+      $http.get($scope.conf.url.movies + '/conf', {}, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        }).
+        success(function(data, status) {
+          $scope.conf.image.baseUrl = data.images.base_url;
+          ApiConfigService.setConf($scope.conf);
+          $scope.fetch();
+        }).
+        error(function(data, status) {
+            
+        });
+    }else{
+      $scope.fetch();
+    }
+  };
+  $scope.removeMovie = function(mid){
+    ListService.deleteMovieFromList(
+      $scope.list._id, 
+      mid,
+      function(){
+        delete $rootScope.user.lists[$scope.list._id]['movies'][mid];
+        AuthService.setUser($rootScope.user, false);
+    });
+  };
+  $scope.fetch = function(){
+    $scope.loadingClass = AlertsService.getLoadingClass();
+    $scope.loaded = false;
+    $scope.imgUrl = $scope.conf.image.baseUrl;
+    ListService.getList( $scope.id,  function(list){
+      $scope.list = list;
+      $scope.movies = $scope.movieStore = list.movies;
+      $scope.loaded = true;
+      $scope.name = list.name;
+      $scope.description = list.description;
+    });
+  };
+  $scope.filterMovie = function(){
+    var movies = [];
+    if($scope.filter != '' && $scope.movieStore){
+      angular.forEach($scope.movieStore, function(movie, key){
+        if(movie.title.search(new RegExp($scope.filter, "i")) != -1){
+          movies.push(movie);
+        }
+      });
+    }else{
+      movies = $scope.movieStore;
+    }
+    $scope.movies = movies;
+  };
+  $scope.openAddPopUp = function(list){
+    ListService.setListBoxData(list);
+    var d = $dialog.dialog($scope.dialogOpts);
+    d.open().then(function(result){
+    });
+  }
+
+})
+.controller( 'ListAddBoxCtrl', function ListAddBoxCtrl( $scope, $rootScope, $http, dialog, ListService, ApiConfigService, AuthService, AlertsService ) {
+  $scope.list = ListService.getListBoxData();
+  $scope.conf = ApiConfigService.getConf();
+  $scope.loaded = true;
+  $scope.user = $rootScope.user;
+  $scope.addButtons = [];
+  $scope.close = function(){
+    dialog.close();
+  };
+  /**
+  * Gets the list for search 
+  */
+  $scope.fetch = function() {
+    $scope.loadingClass = AlertsService.getLoadingClass();
+    $scope.loaded = false;
+    $scope.imgUrl = $scope.conf.image.baseUrl;
+    if($scope.search == ''){
+      $scope.movies = {};
+      return;
+    }
+    var url = $scope.conf.url.movies + '/search?q=' + $scope.search;  
+    $http.get(url, {}, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+      }).
+      success(function(data, status) {
+        $scope.loaded = true;
+        angular.forEach(data.results, function(movie, key){
+          $scope.addButtons[movie.id] = !$scope.checkMovieInList(movie.id);
+        });
+        $scope.movies = data.results;
+      }).
+      error(function(data, status) {
+        $scope.data = data || "Request failed";
+    });
+  };
+  $scope.checkMovieInList = function(mid){
+    if($scope.user.lists[$scope.list._id]['movies'][mid]){
+      return true;
+    }else{
+      return false;
+    }
+  }
+  $scope.toggleMovieList = function(mid, action){
+    if(action == 'add'){
+      ListService.addMovieToList(
+        $rootScope.user.lists[$scope.list._id], 
+        mid,
+        function(){
+          $rootScope.user.lists[$scope.list._id]['movies'][mid] = mid;
+          AuthService.setUser($rootScope.user, false);
+          $scope.addButtons[mid] = false;
+        });
+    }else{
+      ListService.deleteMovieFromList(
+        $scope.list._id, 
+        mid,
+        function(){
+          delete $rootScope.user.lists[$scope.list._id]['movies'][mid];
+          AuthService.setUser($rootScope.user, false);
+          $scope.addButtons[mid] = true;
+      });
+    }
+  }
 });
 ;
 angular.module( 'gojira.movies', [
@@ -447,7 +618,9 @@ angular.module( 'gojira.ratings', [
     $scope.imgUrl = $scope.conf.image.baseUrl;
     RatingService.getRatingsWithMovies($scope.conf.url.users, $rootScope.user._id, function(ratings, movies){
       $scope.ratings = ratings;
+      $scope.none = true;
       angular.forEach($scope.ratings, function(rating, movie){
+        $scope.none = false;
         $scope.setDefaultRatings(movie);
       });
       $scope.movies = $scope.movieStore = movies;
@@ -667,8 +840,12 @@ angular.module( 'gojira.user', [
           $scope.isCollapsed = true;
           RatingService.getRatings($scope.conf.url.users, user._id, function(ratings){
             user.ratings = ratings || {};
-            AuthService.setUser(user, true);
-            AlertsService.setAlert('info', 'Logged in as ' + userData.name);
+            ListService.getAllLists($scope.conf.url.users, user._id, function(lists){
+              user.lists = lists || {};
+              AuthService.setUser(user, true);
+              AlertsService.setAlert('info', 'Login successful ');
+              $scope.close();
+            });
           });
         }else{
           AlertsService.setAlert('error', 'Login failed');
@@ -914,9 +1091,13 @@ angular.module('Auth', ['Storage'])
   }
 });
 angular.module('List', ['Alerts'])
-.factory('ListService', function($http, $rootScope, AlertsService){
+.factory('ListService', function($http, $rootScope, AlertsService, AuthService, ApiConfigService){
   var _box = {};
   var _movie= {};
+  var _list = {};
+  var _id = $rootScope.user._id;
+  var _token = AuthService.getUserToken();
+  var _url = ApiConfigService.getConf().url.users;
   return {
     getListBox: function(){
       return _box;
@@ -943,15 +1124,30 @@ angular.module('List', ['Alerts'])
         callback(lists);
       })
     },
-    getList: function(){
-
+    getList: function(lid, cb){
+      var callback = cb;
+      var list = {};
+      $http({
+        url: _url + '/lists/' + _id + '?lid=' + lid, 
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+      }).
+      success(function(listData, status) {
+        if(listData.code == 0){
+          list = listData.list;
+        }
+        callback(list);
+      }).
+      error(function(listData, status) {
+        callback(list);
+      })
     },
-    saveList: function(uid, token, url, list, callback){
+    saveList: function(list, callback){
       var id = list._id;
       $http({
-        url:url + '/lists', 
+        url:_url + '/lists', 
         method: 'PUT',
-        data: {uid: uid, token:token, list: list},
+        data: {uid: _id, token:_token, list: list},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -969,12 +1165,12 @@ angular.module('List', ['Alerts'])
         AlertsService.setAlert('error', 'List Operation failed');
       });
     },
-    deleteList: function(uid, token, url, lid, callback){
+    deleteList: function(lid, callback){
       var id = lid;
       $http({
-        url:url + '/lists', 
+        url:_url + '/lists', 
         method: 'DELETE',
-        data: {uid: uid, token:token, lid: lid},
+        data: {uid: _id, token:_token, lid: lid},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -1003,11 +1199,41 @@ angular.module('List', ['Alerts'])
       }
       return movieLists;
     },
-    addMovieToList: function(){
-
+    addMovieToList: function( list, mid, callback){
+      $http({
+        url:_url + '/lists', 
+        method: 'PUT',
+        data: {uid: _id, token:_token, list: list, mid:mid},
+        headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+      }).
+      success(function(listData, status) {
+        if(listData.code == 0){
+          callback();
+        }else{
+          AlertsService.setAlert('error', listData.status);
+        }
+      }).
+      error(function(listData, status) {
+        AlertsService.setAlert('error', 'List Operation failed');
+      });
     },
-    deleteMovieFromList: function(){
-
+    deleteMovieFromList: function(lid, mid, callback){
+      $http({
+        url:_url + '/lists', 
+        method: 'DELETE',
+        data: {uid: _id, token: _token, lid: lid, mid:mid},
+        headers: { 'Content-Type': 'application/json; charset=UTF-8'}
+      }).
+      success(function(listData, status) {
+        if(listData.code == 0){
+          callback();
+        }else{
+          AlertsService.setAlert('error', listData.status);
+        }
+      }).
+      error(function(listData, status) {
+        AlertsService.setAlert('error', 'List Operation failed');
+      });
     },
     getListColors: function(){
       return ['#c0392b', '#16a085', '#2980b9', '#d35400', '#2c3e50', '#f1c40f'];
@@ -1027,7 +1253,13 @@ angular.module('List', ['Alerts'])
     },
     getMovieBoxData: function(){
       return _movie;
-    }
+    },
+    setListBoxData: function(list){
+      _list = list;
+    },
+    getListBoxData: function(){
+      return _list;
+    },
   };
 });
 /**
@@ -1095,8 +1327,8 @@ angular.module('Rating', ['Alerts'])
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(ratingData, status) {
-        if(ratingData.code == 0){
-          ratings = JSON.parse(ratingData.ratings);
+        if(ratingData.code == 0 ){
+          ratings = ratingData.ratings;
         }
         callback(ratings);
       }).
@@ -1115,7 +1347,7 @@ angular.module('Rating', ['Alerts'])
       }).
       success(function(ratingData, status) {
         if(ratingData.code == 0){
-          ratings = JSON.parse(ratingData.ratings);
+          ratings = ratingData.ratings;
           movies = ratingData.movies;
         }
         callback(ratings, movies);
@@ -1167,7 +1399,46 @@ angular.module('Util', [])
   };
 });
 
-angular.module('templates-app', ['lists/box.tpl.html', 'lists/lists.tpl.html', 'lists/movie.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+angular.module('templates-app', ['lists/add.tpl.html', 'lists/box.tpl.html', 'lists/list.tpl.html', 'lists/lists.tpl.html', 'lists/movie.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+
+angular.module("lists/add.tpl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("lists/add.tpl.html",
+    "<div class=\"list-box popup\">\n" +
+    "  <div class=\"row-fluid\">\n" +
+    "    <div class=\"row-fuild ribbon\">\n" +
+    "      <span class=\"pull-right\" ng-click=\"close()\">\n" +
+    "        <i class=\"icon-remove-sign close-btn\"></i>\n" +
+    "      </span>\n" +
+    "    </div>\n" +
+    "    <div class=\"span10 movie-list-box-inner\">\n" +
+    "      <h5> Add movies to {{list.name}} </h5>\n" +
+    "      <div class=\"row-fluid\">\n" +
+    "        <input type=\"text\" class=\"span12\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"fetch()\"/>\n" +
+    "      </div>\n" +
+    "      <div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "        <div class=\"loader\" ng-class=\"loadingClass\"><h4> Loading.. </h4></div>\n" +
+    "      </div>\n" +
+    "      <div class=\"row-fluid search-results list-movie-results\" ng-show=\"loaded && movies\">\n" +
+    "        <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "          <div class=\"span1\">\n" +
+    "            <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img-rating\"></img>\n" +
+    "          </div>\n" +
+    "          <div class=\"span6\">\n" +
+    "            <h6>{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</h6>\n" +
+    "          </div>\n" +
+    "          <div class=\"pull-right\">\n" +
+    "            <button class=\"btn btn-danger pull-right\" type=\"button\" ng-click=\"toggleMovieList(movie.id, 'remove')\" ng-if=\"!addButtons[movie.id]\"><i class=\"icon-remove\"></i></button>\n" +
+    "            <button class=\"btn btn-success pull-right\" type=\"button\" ng-click=\"toggleMovieList(movie.id, 'add')\" ng-if=\"addButtons[movie.id]\"><i class=\"icon-plus\"></i></button>\n" +
+    "          </div>\n" +
+    "        </div>\n" +
+    "      </div>\n" +
+    "      <div class=\"row-fluid search-results\" ng-show=\"!movies.length && loaded && search != ''\">\n" +
+    "        No movies found.\n" +
+    "      </div>\n" +
+    "    </div>\n" +
+    "  </div>\n" +
+    "</div>");
+}]);
 
 angular.module("lists/box.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/box.tpl.html",
@@ -1204,9 +1475,36 @@ angular.module("lists/box.tpl.html", []).run(["$templateCache", function($templa
     "</div>");
 }]);
 
+angular.module("lists/list.tpl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("lists/list.tpl.html",
+    "<div class=\"row-fluid search-input\" data-ng-init=\"init()\">\n" +
+    "  <input type=\"text\" class=\"span10 offset1\" placeholder=\"Type to search for a movie in '{{name}}'\" ng-model=\"filter\" ng-keyup=\"filterMovie()\"/>\n" +
+    "</div>\n" +
+    "<h3>{{name}}</h3>\n" +
+    "<span class=\"add-list-icon pull-right\" ng-click=\"openAddPopUp(list)\"><i class=\"icon-plus\"></i>Add</span>\n" +
+    "<p>{{description}}</p>\n" +
+    "<div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "  <div class=\"loader\" ng-class=\"loadingClass\"><h4> Loading.. </h4></div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"loaded && movies\">\n" +
+    "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "    <div class=\"span1\">\n" +
+    "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img-rating\"></img>\n" +
+    "    </div>\n" +
+    "    <div class=\"span8\">\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n" +
+    "    </div>\n" +
+    "    <button class=\"btn btn-danger pull-right\" type=\"button\" ng-click=\"removeMovie(movie.id)\"><i class=\"icon-remove\"></i></button>\n" +
+    "  </div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"!movies.length && loaded\">\n" +
+    "  No movies found.\n" +
+    "</div>");
+}]);
+
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/lists.tpl.html",
-    "<button class=\"btn btn-success pull-right\" type=\"button\" ng-click=\"openListBox('create', 0)\" >Create</button>\n" +
+    "<button class=\"btn btn-success pull-right\" type=\"button\" ng-click=\"openListBox('create', 0)\" ><i class=\"icon-plus\"> </i>Create</button>\n" +
     "<h3>My Lists</h3>\n" +
     "<div class=\"row-fluid list-wrap\" data-ng-init=\"init()\">\n" +
     "  {{message}}\n" +
@@ -1228,7 +1526,7 @@ angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($temp
 
 angular.module("lists/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/movie.tpl.html",
-    "<div class=\"list-box popup\">\n" +
+    "<div class=\"list-box popup\" ng-init=\"init()\">\n" +
     "  <div class=\"row-fluid\">\n" +
     "    <div class=\"row-fuild ribbon\">\n" +
     "      <span class=\"pull-right\" ng-click=\"close()\">\n" +
@@ -1237,13 +1535,15 @@ angular.module("lists/movie.tpl.html", []).run(["$templateCache", function($temp
     "    </div>\n" +
     "    <div class=\"row-fluid movie-list-box-inner\">\n" +
     "      <h5> Add '{{movie.title}}' To Lists </h5>\n" +
-    "      <span ng-repeat=\"list in lists\">\n" +
-    "        <div ng-style=\"{background : list.color}\" class=\"list-wrap span10\">\n" +
+    "      <span ng-repeat=\"list in lists\" class=\"list-wrap-outer\">\n" +
+    "        <div ng-style=\"{background : list.color}\" class=\"list-wrap span11\">\n" +
     "          <i class=\"icon-check check\" ng-if=\"checked[list._id]\" ng-click=\"toggleMovieList(list._id)\"></i>\n" +
     "          <i class=\"icon-check-empty check\" ng-if=\"!checked[list._id]\" ng-click=\"toggleMovieList(list._id)\"></i>\n" +
     "          <span>{{list.name}}</span>\n" +
     "        </div>\n" +
     "      </span>\n" +
+    "      {{lists.length}}\n" +
+    "      <span ng-if=\"none\">No lists found.</span>\n" +
     "    </div>\n" +
     "  </div>\n" +
     "</div>");
@@ -1382,7 +1682,7 @@ angular.module("ratings/ratings.tpl.html", []).run(["$templateCache", function($
     "     </div>\n" +
     "  </div>\n" +
     "</div>\n" +
-    "<div class=\"row-fluid search-results\" ng-show=\"!ratings && loaded\">\n" +
+    "<div class=\"row-fluid search-results\" ng-if=\"none\">\n" +
     "  No ratings found.\n" +
     "</div>\n" +
     "");

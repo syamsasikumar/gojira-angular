@@ -1,4 +1,43 @@
-angular.module('templates-app', ['lists/box.tpl.html', 'lists/lists.tpl.html', 'lists/movie.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+angular.module('templates-app', ['lists/add.tpl.html', 'lists/box.tpl.html', 'lists/list.tpl.html', 'lists/lists.tpl.html', 'lists/movie.tpl.html', 'movies/movies.tpl.html', 'ratings/ratings.tpl.html', 'search/search.tpl.html', 'user/anon.tpl.html', 'user/user.tpl.html']);
+
+angular.module("lists/add.tpl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("lists/add.tpl.html",
+    "<div class=\"list-box popup\">\n" +
+    "  <div class=\"row-fluid\">\n" +
+    "    <div class=\"row-fuild ribbon\">\n" +
+    "      <span class=\"pull-right\" ng-click=\"close()\">\n" +
+    "        <i class=\"icon-remove-sign close-btn\"></i>\n" +
+    "      </span>\n" +
+    "    </div>\n" +
+    "    <div class=\"span10 movie-list-box-inner\">\n" +
+    "      <h5> Add movies to {{list.name}} </h5>\n" +
+    "      <div class=\"row-fluid\">\n" +
+    "        <input type=\"text\" class=\"span12\" placeholder=\"Type to search for movies\" ng-model=\"search\" ng-keyup=\"fetch()\"/>\n" +
+    "      </div>\n" +
+    "      <div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "        <div class=\"loader\" ng-class=\"loadingClass\"><h4> Loading.. </h4></div>\n" +
+    "      </div>\n" +
+    "      <div class=\"row-fluid search-results list-movie-results\" ng-show=\"loaded && movies\">\n" +
+    "        <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "          <div class=\"span1\">\n" +
+    "            <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img-rating\"></img>\n" +
+    "          </div>\n" +
+    "          <div class=\"span6\">\n" +
+    "            <h6>{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</h6>\n" +
+    "          </div>\n" +
+    "          <div class=\"pull-right\">\n" +
+    "            <button class=\"btn btn-danger pull-right\" type=\"button\" ng-click=\"toggleMovieList(movie.id, 'remove')\" ng-if=\"!addButtons[movie.id]\"><i class=\"icon-remove\"></i></button>\n" +
+    "            <button class=\"btn btn-success pull-right\" type=\"button\" ng-click=\"toggleMovieList(movie.id, 'add')\" ng-if=\"addButtons[movie.id]\"><i class=\"icon-plus\"></i></button>\n" +
+    "          </div>\n" +
+    "        </div>\n" +
+    "      </div>\n" +
+    "      <div class=\"row-fluid search-results\" ng-show=\"!movies.length && loaded && search != ''\">\n" +
+    "        No movies found.\n" +
+    "      </div>\n" +
+    "    </div>\n" +
+    "  </div>\n" +
+    "</div>");
+}]);
 
 angular.module("lists/box.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/box.tpl.html",
@@ -35,9 +74,36 @@ angular.module("lists/box.tpl.html", []).run(["$templateCache", function($templa
     "</div>");
 }]);
 
+angular.module("lists/list.tpl.html", []).run(["$templateCache", function($templateCache) {
+  $templateCache.put("lists/list.tpl.html",
+    "<div class=\"row-fluid search-input\" data-ng-init=\"init()\">\n" +
+    "  <input type=\"text\" class=\"span10 offset1\" placeholder=\"Type to search for a movie in '{{name}}'\" ng-model=\"filter\" ng-keyup=\"filterMovie()\"/>\n" +
+    "</div>\n" +
+    "<h3>{{name}}</h3>\n" +
+    "<span class=\"add-list-icon pull-right\" ng-click=\"openAddPopUp(list)\"><i class=\"icon-plus\"></i>Add</span>\n" +
+    "<p>{{description}}</p>\n" +
+    "<div class=\"row-fluid search-results loading-container\" ng-hide=\"loaded\">\n" +
+    "  <div class=\"loader\" ng-class=\"loadingClass\"><h4> Loading.. </h4></div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"loaded && movies\">\n" +
+    "  <div class=\"list-result row-fluid\" ng-repeat=\"movie in movies\" >\n" +
+    "    <div class=\"span1\">\n" +
+    "      <img ng-src=\"{{imgUrl}}/w92/{{movie.poster_path}}\" ng-if=\"movie.poster_path\" class=\"list-img-rating\"></img>\n" +
+    "    </div>\n" +
+    "    <div class=\"span8\">\n" +
+    "      <h4><a href=\"#/movie/{{movie.id}}\">{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</a></h4>\n" +
+    "    </div>\n" +
+    "    <button class=\"btn btn-danger pull-right\" type=\"button\" ng-click=\"removeMovie(movie.id)\"><i class=\"icon-remove\"></i></button>\n" +
+    "  </div>\n" +
+    "</div>\n" +
+    "<div class=\"row-fluid search-results\" ng-show=\"!movies.length && loaded\">\n" +
+    "  No movies found.\n" +
+    "</div>");
+}]);
+
 angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/lists.tpl.html",
-    "<button class=\"btn btn-success pull-right\" type=\"button\" ng-click=\"openListBox('create', 0)\" >Create</button>\n" +
+    "<button class=\"btn btn-success pull-right\" type=\"button\" ng-click=\"openListBox('create', 0)\" ><i class=\"icon-plus\"> </i>Create</button>\n" +
     "<h3>My Lists</h3>\n" +
     "<div class=\"row-fluid list-wrap\" data-ng-init=\"init()\">\n" +
     "  {{message}}\n" +
@@ -59,7 +125,7 @@ angular.module("lists/lists.tpl.html", []).run(["$templateCache", function($temp
 
 angular.module("lists/movie.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("lists/movie.tpl.html",
-    "<div class=\"list-box popup\">\n" +
+    "<div class=\"list-box popup\" ng-init=\"init()\">\n" +
     "  <div class=\"row-fluid\">\n" +
     "    <div class=\"row-fuild ribbon\">\n" +
     "      <span class=\"pull-right\" ng-click=\"close()\">\n" +
@@ -68,13 +134,15 @@ angular.module("lists/movie.tpl.html", []).run(["$templateCache", function($temp
     "    </div>\n" +
     "    <div class=\"row-fluid movie-list-box-inner\">\n" +
     "      <h5> Add '{{movie.title}}' To Lists </h5>\n" +
-    "      <span ng-repeat=\"list in lists\">\n" +
-    "        <div ng-style=\"{background : list.color}\" class=\"list-wrap span10\">\n" +
+    "      <span ng-repeat=\"list in lists\" class=\"list-wrap-outer\">\n" +
+    "        <div ng-style=\"{background : list.color}\" class=\"list-wrap span11\">\n" +
     "          <i class=\"icon-check check\" ng-if=\"checked[list._id]\" ng-click=\"toggleMovieList(list._id)\"></i>\n" +
     "          <i class=\"icon-check-empty check\" ng-if=\"!checked[list._id]\" ng-click=\"toggleMovieList(list._id)\"></i>\n" +
     "          <span>{{list.name}}</span>\n" +
     "        </div>\n" +
     "      </span>\n" +
+    "      {{lists.length}}\n" +
+    "      <span ng-if=\"none\">No lists found.</span>\n" +
     "    </div>\n" +
     "  </div>\n" +
     "</div>");
@@ -213,7 +281,7 @@ angular.module("ratings/ratings.tpl.html", []).run(["$templateCache", function($
     "     </div>\n" +
     "  </div>\n" +
     "</div>\n" +
-    "<div class=\"row-fluid search-results\" ng-show=\"!ratings && loaded\">\n" +
+    "<div class=\"row-fluid search-results\" ng-if=\"none\">\n" +
     "  No ratings found.\n" +
     "</div>\n" +
     "");
