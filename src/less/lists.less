@@ -34,7 +34,7 @@
 }
 .movie-list-field{
   .add{
-    background-color:#5bb75b;
+    background-color:@green-button;
     color:white;
     padding:2px 4px;
     cursor:pointer;
@@ -49,6 +49,7 @@
 }
 .movie-list-box-inner{
   margin: 10px;
+  padding-left: 20px;
   .list-wrap{
     padding:10px;
     margin:5px;
@@ -56,5 +57,21 @@
   }
   .check{
     cursor:pointer;
+  }
+}
+.add-list-icon{
+  background-color:@green-button;
+  color:white;
+  padding:2px 8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+.list-movie-results{
+  max-height: 300px;
+  overflow-y: scroll;
+}
+.movie-list-box-inner{
+  .search-results{
+    margin-top:10px;
   }
 }

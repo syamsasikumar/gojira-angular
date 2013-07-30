@@ -1,0 +1,35 @@
+<div class="list-box popup">
+  <div class="row-fluid">
+    <div class="row-fuild ribbon">
+      <span class="pull-right" ng-click="close()">
+        <i class="icon-remove-sign close-btn"></i>
+      </span>
+    </div>
+    <div class="span10 movie-list-box-inner">
+      <h5> Add movies to {{list.name}} </h5>
+      <div class="row-fluid">
+        <input type="text" class="span12" placeholder="Type to search for movies" ng-model="search" ng-keyup="fetch()"/>
+      </div>
+      <div class="row-fluid search-results loading-container" ng-hide="loaded">
+        <div class="loader" ng-class="loadingClass"><h4> Loading.. </h4></div>
+      </div>
+      <div class="row-fluid search-results list-movie-results" ng-show="loaded && movies">
+        <div class="list-result row-fluid" ng-repeat="movie in movies" >
+          <div class="span1">
+            <img ng-src="{{imgUrl}}/w92/{{movie.poster_path}}" ng-if="movie.poster_path" class="list-img-rating"></img>
+          </div>
+          <div class="span6">
+            <h6>{{movie.title}} ( {{movie.release_date.substring(0,4)}} )</h6>
+          </div>
+          <div class="pull-right">
+            <button class="btn btn-danger pull-right" type="button" ng-click="toggleMovieList(movie.id, 'remove')" ng-if="!addButtons[movie.id]"><i class="icon-remove"></i></button>
+            <button class="btn btn-success pull-right" type="button" ng-click="toggleMovieList(movie.id, 'add')" ng-if="addButtons[movie.id]"><i class="icon-plus"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="row-fluid search-results" ng-show="!movies.length && loaded && search != ''">
+        No movies found.
+      </div>
+    </div>
+  </div>
+</div>

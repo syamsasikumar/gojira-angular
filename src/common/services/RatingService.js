@@ -29,8 +29,8 @@ angular.module('Rating', ['Alerts'])
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(ratingData, status) {
-        if(ratingData.code == 0){
-          ratings = JSON.parse(ratingData.ratings);
+        if(ratingData.code == 0 ){
+          ratings = ratingData.ratings;
         }
         callback(ratings);
       }).
@@ -49,7 +49,7 @@ angular.module('Rating', ['Alerts'])
       }).
       success(function(ratingData, status) {
         if(ratingData.code == 0){
-          ratings = JSON.parse(ratingData.ratings);
+          ratings = ratingData.ratings;
           movies = ratingData.movies;
         }
         callback(ratings, movies);

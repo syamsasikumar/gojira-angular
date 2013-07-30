@@ -86,7 +86,9 @@ angular.module( 'gojira.ratings', [
     $scope.imgUrl = $scope.conf.image.baseUrl;
     RatingService.getRatingsWithMovies($scope.conf.url.users, $rootScope.user._id, function(ratings, movies){
       $scope.ratings = ratings;
+      $scope.none = true;
       angular.forEach($scope.ratings, function(rating, movie){
+        $scope.none = false;
         $scope.setDefaultRatings(movie);
       });
       $scope.movies = $scope.movieStore = movies;

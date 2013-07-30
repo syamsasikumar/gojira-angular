@@ -49,8 +49,12 @@ angular.module( 'gojira.user', [
           $scope.isCollapsed = true;
           RatingService.getRatings($scope.conf.url.users, user._id, function(ratings){
             user.ratings = ratings || {};
-            AuthService.setUser(user, true);
-            AlertsService.setAlert('info', 'Logged in as ' + userData.name);
+            ListService.getAllLists($scope.conf.url.users, user._id, function(lists){
+              user.lists = lists || {};
+              AuthService.setUser(user, true);
+              AlertsService.setAlert('info', 'Login successful ');
+              $scope.close();
+            });
           });
         }else{
           AlertsService.setAlert('error', 'Login failed');
