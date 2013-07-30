@@ -1095,7 +1095,7 @@ angular.module('List', ['Alerts'])
   var _box = {};
   var _movie= {};
   var _list = {};
-  var _id = $rootScope.user._id;
+  var _id = $rootScope.user ? $rootScope.user._id: 0;
   var _token = AuthService.getUserToken();
   var _url = ApiConfigService.getConf().url.users;
   return {
