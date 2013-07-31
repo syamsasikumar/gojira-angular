@@ -139,14 +139,14 @@
             movies: $scope.movies
           };
         if ($scope.action == 'create' || $scope.action == 'edit') {
-          ListService.saveList(list, function (id) {
+          ListService.saveList($rootScope.user._id, AuthService.getUserToken(), list, function (id) {
             list._id = id;
             $rootScope.user.lists[id] = list;
             AuthService.setUser($rootScope.user, false);
             AlertsService.setAlert('success', 'List Saved');
           });
         } else if ($scope.action == 'delete') {
-          ListService.deleteList(list._id, function (id) {
+          ListService.deleteList($rootScope.user._id, AuthService.getUserToken(), list._id, function (id) {
             delete $rootScope.user.lists[id];
             AuthService.setUser($rootScope.user, false);
             AlertsService.setAlert('success', 'List Deleted');
@@ -190,14 +190,14 @@
       };
       $scope.toggleMovieList = function (listId) {
         if (!$scope.checkMovieInList(listId)) {
-          ListService.addMovieToList($rootScope.user.lists[listId], $scope.movie.id, function () {
+          ListService.addMovieToList($rootScope.user._id, AuthService.getUserToken(), $rootScope.user.lists[listId], $scope.movie.id, function () {
             $rootScope.user.lists[listId]['movies'][$scope.movie.id] = $scope.movie.id;
             $scope.checked[listId] = true;
             AuthService.setUser($rootScope.user, false);
             $scope.movieLists = ListService.getListsForMovie($scope.movie.id);
           });
         } else {
-          ListService.deleteMovieFromList(listId, $scope.movie.id, function () {
+          ListService.deleteMovieFromList($rootScope.user._id, AuthService.getUserToken(), listId, $scope.movie.id, function () {
             $scope.checked[listId] = false;
             delete $rootScope.user.lists[listId]['movies'][$scope.movie.id];
             AuthService.setUser($rootScope.user, false);
@@ -265,7 +265,7 @@
         }
       };
       $scope.removeMovie = function (mid) {
-        ListService.deleteMovieFromList($scope.list._id, mid, function () {
+        ListService.deleteMovieFromList($rootScope.user._id, AuthService.getUserToken(), $scope.list._id, mid, function () {
           delete $rootScope.user.lists[$scope.list._id]['movies'][mid];
           AuthService.setUser($rootScope.user, false);
         });
@@ -274,7 +274,7 @@
         $scope.loadingClass = AlertsService.getLoadingClass();
         $scope.loaded = false;
         $scope.imgUrl = $scope.conf.image.baseUrl;
-        ListService.getList($scope.id, function (list) {
+        ListService.getList($rootScope.user._id, $scope.id, function (list) {
           $scope.list = list;
           $scope.movies = $scope.movieStore = list.movies;
           $scope.loaded = true;
@@ -348,13 +348,13 @@
       };
       $scope.toggleMovieList = function (mid, action) {
         if (action == 'add') {
-          ListService.addMovieToList($rootScope.user.lists[$scope.list._id], mid, function () {
+          ListService.addMovieToList($rootScope.user._id, AuthService.getUserToken(), $rootScope.user.lists[$scope.list._id], mid, function () {
             $rootScope.user.lists[$scope.list._id]['movies'][mid] = mid;
             AuthService.setUser($rootScope.user, false);
             $scope.addButtons[mid] = false;
           });
         } else {
-          ListService.deleteMovieFromList($scope.list._id, mid, function () {
+          ListService.deleteMovieFromList($rootScope.user._id, AuthService.getUserToken(), $scope.list._id, mid, function () {
             delete $rootScope.user.lists[$scope.list._id]['movies'][mid];
             AuthService.setUser($rootScope.user, false);
             $scope.addButtons[mid] = true;
@@ -789,9 +789,16 @@
     '$rootScope',
     '$routeParams',
     '$location',
-    'AlertsService',
-    function UserCtrl($scope, $rootScope, $routeParams, $location, AlertsService) {
+    'ListService',
+    'RatingService',
+    function UserCtrl($scope, $rootScope, $routeParams, $location, ListService, RatingService) {
       if ($rootScope.user && $rootScope.user._id == $routeParams.id) {
+        $scope.name = $rootScope.user.name;
+        $scope.listCount = ListService.getListCount();
+        $scope.listMovies = ListService.getListMovieCount();
+        $scope.ratingsCount = RatingService.getRatingsCount();
+        $scope.avgRating = RatingService.getAverageRating();
+        $scope.ratingClass = RatingService.getRatingClass($scope.avgRating);
       } else {
         $location.path('/');
       }
@@ -1011,12 +1018,11 @@
     'AlertsService',
     'AuthService',
     'ApiConfigService',
-    function ($http, $rootScope, AlertsService, AuthService, ApiConfigService) {
+    'UtilityService',
+    function ($http, $rootScope, AlertsService, AuthService, ApiConfigService, UtilityService) {
       var _box = {};
       var _movie = {};
       var _list = {};
-      var _id = $rootScope.user ? $rootScope.user._id : 0;
-      var _token = AuthService.getUserToken();
       var _url = ApiConfigService.getConf().url.users;
       return {
         getListBox: function () {
@@ -1042,11 +1048,11 @@
             callback(lists);
           });
         },
-        getList: function (lid, cb) {
+        getList: function (id, lid, cb) {
           var callback = cb;
           var list = {};
           $http({
-            url: _url + '/lists/' + _id + '?lid=' + lid,
+            url: _url + '/lists/' + id + '?lid=' + lid,
             method: 'GET',
             headers: { 'Content-Type': 'application/json; charset=UTF-8' }
           }).success(function (listData, status) {
@@ -1058,14 +1064,14 @@
             callback(list);
           });
         },
-        saveList: function (list, callback) {
+        saveList: function (uid, token, list, callback) {
           var id = list._id;
           $http({
             url: _url + '/lists',
             method: 'PUT',
             data: {
-              uid: _id,
-              token: _token,
+              uid: uid,
+              token: token,
               list: list
             },
             headers: { 'Content-Type': 'application/json; charset=UTF-8' }
@@ -1083,14 +1089,14 @@
             AlertsService.setAlert('error', 'List Operation failed');
           });
         },
-        deleteList: function (lid, callback) {
+        deleteList: function (uid, token, lid, callback) {
           var id = lid;
           $http({
             url: _url + '/lists',
             method: 'DELETE',
             data: {
-              uid: _id,
-              token: _token,
+              uid: uid,
+              token: token,
               lid: lid
             },
             headers: { 'Content-Type': 'application/json; charset=UTF-8' }
@@ -1119,13 +1125,13 @@
           }
           return movieLists;
         },
-        addMovieToList: function (list, mid, callback) {
+        addMovieToList: function (id, token, list, mid, callback) {
           $http({
             url: _url + '/lists',
             method: 'PUT',
             data: {
-              uid: _id,
-              token: _token,
+              uid: id,
+              token: token,
               list: list,
               mid: mid
             },
@@ -1140,13 +1146,13 @@
             AlertsService.setAlert('error', 'List Operation failed');
           });
         },
-        deleteMovieFromList: function (lid, mid, callback) {
+        deleteMovieFromList: function (id, token, lid, mid, callback) {
           $http({
             url: _url + '/lists',
             method: 'DELETE',
             data: {
-              uid: _id,
-              token: _token,
+              uid: id,
+              token: token,
               lid: lid,
               mid: mid
             },
@@ -1192,6 +1198,18 @@
         },
         getListBoxData: function () {
           return _list;
+        },
+        getListCount: function () {
+          return UtilityService.getObjectLength($rootScope.user.lists);
+        },
+        getListMovieCount: function () {
+          var count = 0;
+          var userLists = $rootScope.user.lists;
+          for (key in userLists) {
+            var list = userLists[key];
+            count += UtilityService.getObjectLength(userLists[key].movies);
+          }
+          return count;
         }
       };
     }
@@ -1228,7 +1246,8 @@
     '$http',
     '$rootScope',
     'AlertsService',
-    function ($http, $rootScope, AlertsService) {
+    'UtilityService',
+    function ($http, $rootScope, AlertsService, UtilityService) {
       return {
         getRatingClass: function (rating) {
           if (rating < 5) {
@@ -1312,6 +1331,21 @@
             }).error(function (ratingData, status) {
               AlertsService.setAlert('error', 'Rating failed');
             });
+          }
+        },
+        getRatingsCount: function () {
+          return UtilityService.getObjectLength($rootScope.user.ratings);
+        },
+        getAverageRating: function () {
+          var ratings = $rootScope.user.ratings;
+          var total = 0;
+          for (key in ratings) {
+            total += ratings[key];
+          }
+          if (total > 0) {
+            return (total / UtilityService.getObjectLength($rootScope.user.ratings)).toFixed(1);
+          } else {
+            return 0;
           }
         }
       };
@@ -1400,7 +1434,7 @@
   angular.module('user/user.tpl.html', []).run([
     '$templateCache',
     function ($templateCache) {
-      $templateCache.put('user/user.tpl.html', '&nbsp;');
+      $templateCache.put('user/user.tpl.html', '&nbsp;\n' + '<div class="row-fluid">\n' + '  <div class="dashboard-rec">\n' + '    <h3>{{name}}</h3>\n' + '    <div class="row-fluid row">\n' + '      <div class="span6 dashboard-col">\n' + '        <div class="dashboard-number center-align movies-rated">\n' + '          {{ratingsCount}}\n' + '        </div>\n' + '        <div class="dashboard-val center-align">\n' + '          <p>Movies Rated</p>\n' + '        </div>\n' + '      </div>\n' + '      <div class="span6 dashboard-col">\n' + '        <div class="dashboard-number center-align" ng-class="ratingClass">\n' + '          {{avgRating}}\n' + '        </div>\n' + '        <div class="dashboard-val center-align">\n' + '          <p>Average Rating</p>\n' + '        </div>\n' + '      </div>\n' + '    </div>\n' + '    <div class="row-fluid row">\n' + '      <div class="span6 dashboard-col">\n' + '        <div class="dashboard-number center-align lists-created">\n' + '          {{listCount}}\n' + '        </div>\n' + '        <div class="dashboard-val center-align">\n' + '          <p>Lists Created</p>\n' + '        </div>\n' + '      </div>\n' + '      <div class="span6 dashboard-col">\n' + '        <div class="dashboard-number center-align list-movies">\n' + '          {{listMovies}}\n' + '        </div>\n' + '        <div class="dashboard-val center-align">\n' + '          <p>Movies In Lists</p>\n' + '        </div>\n' + '      </div>\n' + '    </div>\n' + '  </div>\n' + '</div>');
     }
   ]);
   angular.module('templates-component', []);

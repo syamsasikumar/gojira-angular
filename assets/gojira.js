@@ -140,6 +140,8 @@ angular.module( 'gojira.lists', [
     var list = {_id: $scope._id, name:$scope.name, description:$scope.description, color:$scope.color, movies: $scope.movies};
     if($scope.action == 'create' || $scope.action == 'edit'){
       ListService.saveList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         list,
         function(id){
           list._id = id;
@@ -149,6 +151,8 @@ angular.module( 'gojira.lists', [
       });
     }else if($scope.action == 'delete'){
       ListService.deleteList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         list._id,
         function(id){
           delete $rootScope.user.lists[id];
@@ -190,6 +194,8 @@ angular.module( 'gojira.lists', [
   $scope.toggleMovieList = function(listId){
     if(!$scope.checkMovieInList(listId)){
       ListService.addMovieToList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         $rootScope.user.lists[listId], 
         $scope.movie.id,
         function(){
@@ -200,6 +206,8 @@ angular.module( 'gojira.lists', [
         });
     }else{
       ListService.deleteMovieFromList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         listId, 
         $scope.movie.id,
         function(){
@@ -272,6 +280,8 @@ angular.module( 'gojira.lists', [
   };
   $scope.removeMovie = function(mid){
     ListService.deleteMovieFromList(
+      $rootScope.user._id, 
+      AuthService.getUserToken(),
       $scope.list._id, 
       mid,
       function(){
@@ -283,7 +293,7 @@ angular.module( 'gojira.lists', [
     $scope.loadingClass = AlertsService.getLoadingClass();
     $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
-    ListService.getList( $scope.id,  function(list){
+    ListService.getList( $rootScope.user._id, $scope.id,  function(list){
       $scope.list = list;
       $scope.movies = $scope.movieStore = list.movies;
       $scope.loaded = true;
@@ -357,6 +367,8 @@ angular.module( 'gojira.lists', [
   $scope.toggleMovieList = function(mid, action){
     if(action == 'add'){
       ListService.addMovieToList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         $rootScope.user.lists[$scope.list._id], 
         mid,
         function(){
@@ -366,6 +378,8 @@ angular.module( 'gojira.lists', [
         });
     }else{
       ListService.deleteMovieFromList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         $scope.list._id, 
         mid,
         function(){
@@ -886,8 +900,14 @@ $scope.openLoginBox = function(){
 /**
 * Controller for user admin
 */
-.controller( 'UserCtrl', function UserCtrl ( $scope, $rootScope, $routeParams, $location, AlertsService) {
+.controller( 'UserCtrl', function UserCtrl ( $scope, $rootScope, $routeParams, $location, ListService, RatingService) {
   if($rootScope.user && $rootScope.user._id == $routeParams.id){
+    $scope.name = $rootScope.user.name;
+    $scope.listCount = ListService.getListCount();
+    $scope.listMovies = ListService.getListMovieCount();
+    $scope.ratingsCount = RatingService.getRatingsCount();
+    $scope.avgRating = RatingService.getAverageRating();
+    $scope.ratingClass = RatingService.getRatingClass($scope.avgRating);
 
   }else{
     $location.path('/');
@@ -1091,12 +1111,10 @@ angular.module('Auth', ['Storage'])
   }
 });
 angular.module('List', ['Alerts'])
-.factory('ListService', function($http, $rootScope, AlertsService, AuthService, ApiConfigService){
+.factory('ListService', function($http, $rootScope, AlertsService, AuthService, ApiConfigService, UtilityService){
   var _box = {};
   var _movie= {};
   var _list = {};
-  var _id = $rootScope.user ? $rootScope.user._id: 0;
-  var _token = AuthService.getUserToken();
   var _url = ApiConfigService.getConf().url.users;
   return {
     getListBox: function(){
@@ -1124,11 +1142,11 @@ angular.module('List', ['Alerts'])
         callback(lists);
       })
     },
-    getList: function(lid, cb){
+    getList: function(id, lid, cb){
       var callback = cb;
       var list = {};
       $http({
-        url: _url + '/lists/' + _id + '?lid=' + lid, 
+        url: _url + '/lists/' + id + '?lid=' + lid, 
         method: 'GET',
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
@@ -1142,12 +1160,12 @@ angular.module('List', ['Alerts'])
         callback(list);
       })
     },
-    saveList: function(list, callback){
+    saveList: function(uid, token, list, callback){
       var id = list._id;
       $http({
         url:_url + '/lists', 
         method: 'PUT',
-        data: {uid: _id, token:_token, list: list},
+        data: {uid: uid, token:token, list: list},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -1165,12 +1183,12 @@ angular.module('List', ['Alerts'])
         AlertsService.setAlert('error', 'List Operation failed');
       });
     },
-    deleteList: function(lid, callback){
+    deleteList: function(uid, token, lid, callback){
       var id = lid;
       $http({
         url:_url + '/lists', 
         method: 'DELETE',
-        data: {uid: _id, token:_token, lid: lid},
+        data: {uid: uid, token:token, lid: lid},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -1199,11 +1217,11 @@ angular.module('List', ['Alerts'])
       }
       return movieLists;
     },
-    addMovieToList: function( list, mid, callback){
+    addMovieToList: function( id, token, list, mid, callback){
       $http({
         url:_url + '/lists', 
         method: 'PUT',
-        data: {uid: _id, token:_token, list: list, mid:mid},
+        data: {uid: id, token:token, list: list, mid:mid},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -1217,11 +1235,11 @@ angular.module('List', ['Alerts'])
         AlertsService.setAlert('error', 'List Operation failed');
       });
     },
-    deleteMovieFromList: function(lid, mid, callback){
+    deleteMovieFromList: function(id, token, lid, mid, callback){
       $http({
         url:_url + '/lists', 
         method: 'DELETE',
-        data: {uid: _id, token: _token, lid: lid, mid:mid},
+        data: {uid: id, token: token, lid: lid, mid:mid},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -1260,6 +1278,18 @@ angular.module('List', ['Alerts'])
     getListBoxData: function(){
       return _list;
     },
+    getListCount: function(){
+      return UtilityService.getObjectLength($rootScope.user.lists);
+    },
+    getListMovieCount: function(){
+      var count = 0;
+      var userLists = $rootScope.user.lists;
+      for(key in userLists){
+        var list = userLists[key];
+        count += UtilityService.getObjectLength(userLists[key].movies);
+      }
+      return count;
+    }
   };
 });
 /**
@@ -1297,7 +1327,7 @@ angular.module('Storage', [])
 });
 
 angular.module('Rating', ['Alerts'])
-.factory('RatingService', function($http, $rootScope, AlertsService){
+.factory('RatingService', function($http, $rootScope, AlertsService, UtilityService){
 
   return {
     getRatingClass : function(rating){
@@ -1381,6 +1411,21 @@ angular.module('Rating', ['Alerts'])
         error(function(ratingData, status) {
           AlertsService.setAlert('error', 'Rating failed');
         });
+      }
+    },
+    getRatingsCount: function(){
+      return UtilityService.getObjectLength($rootScope.user.ratings);
+    },
+    getAverageRating: function(){
+      var ratings = $rootScope.user.ratings;
+      var total = 0;
+      for(key in ratings){
+        total += ratings[key];
+      }
+      if(total > 0){
+        return (total/(UtilityService.getObjectLength($rootScope.user.ratings))).toFixed(1);
+      }else{
+        return 0;
       }
     }
   };
@@ -1783,7 +1828,48 @@ angular.module("user/anon.tpl.html", []).run(["$templateCache", function($templa
 
 angular.module("user/user.tpl.html", []).run(["$templateCache", function($templateCache) {
   $templateCache.put("user/user.tpl.html",
-    "&nbsp;");
+    "&nbsp;\n" +
+    "<div class=\"row-fluid\">\n" +
+    "  <div class=\"dashboard-rec\">\n" +
+    "    <h3>{{name}}</h3>\n" +
+    "    <div class=\"row-fluid row\">\n" +
+    "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-number center-align movies-rated\">\n" +
+    "          {{ratingsCount}}\n" +
+    "        </div>\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p>Movies Rated</p>\n" +
+    "        </div>\n" +
+    "      </div>\n" +
+    "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-number center-align\" ng-class=\"ratingClass\">\n" +
+    "          {{avgRating}}\n" +
+    "        </div>\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p>Average Rating</p>\n" +
+    "        </div>\n" +
+    "      </div>\n" +
+    "    </div>\n" +
+    "    <div class=\"row-fluid row\">\n" +
+    "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-number center-align lists-created\">\n" +
+    "          {{listCount}}\n" +
+    "        </div>\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p>Lists Created</p>\n" +
+    "        </div>\n" +
+    "      </div>\n" +
+    "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-number center-align list-movies\">\n" +
+    "          {{listMovies}}\n" +
+    "        </div>\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p>Movies In Lists</p>\n" +
+    "        </div>\n" +
+    "      </div>\n" +
+    "    </div>\n" +
+    "  </div>\n" +
+    "</div>");
 }]);
 
 angular.module('templates-component', []);
