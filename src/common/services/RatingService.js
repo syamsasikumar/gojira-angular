@@ -1,5 +1,5 @@
 angular.module('Rating', ['Alerts'])
-.factory('RatingService', function($http, $rootScope, AlertsService){
+.factory('RatingService', function($http, $rootScope, AlertsService, UtilityService){
 
   return {
     getRatingClass : function(rating){
@@ -83,6 +83,21 @@ angular.module('Rating', ['Alerts'])
         error(function(ratingData, status) {
           AlertsService.setAlert('error', 'Rating failed');
         });
+      }
+    },
+    getRatingsCount: function(){
+      return UtilityService.getObjectLength($rootScope.user.ratings);
+    },
+    getAverageRating: function(){
+      var ratings = $rootScope.user.ratings;
+      var total = 0;
+      for(key in ratings){
+        total += ratings[key];
+      }
+      if(total > 0){
+        return (total/(UtilityService.getObjectLength($rootScope.user.ratings))).toFixed(1);
+      }else{
+        return 0;
       }
     }
   };

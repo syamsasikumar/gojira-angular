@@ -84,6 +84,8 @@ angular.module( 'gojira.lists', [
     var list = {_id: $scope._id, name:$scope.name, description:$scope.description, color:$scope.color, movies: $scope.movies};
     if($scope.action == 'create' || $scope.action == 'edit'){
       ListService.saveList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         list,
         function(id){
           list._id = id;
@@ -93,6 +95,8 @@ angular.module( 'gojira.lists', [
       });
     }else if($scope.action == 'delete'){
       ListService.deleteList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         list._id,
         function(id){
           delete $rootScope.user.lists[id];
@@ -134,6 +138,8 @@ angular.module( 'gojira.lists', [
   $scope.toggleMovieList = function(listId){
     if(!$scope.checkMovieInList(listId)){
       ListService.addMovieToList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         $rootScope.user.lists[listId], 
         $scope.movie.id,
         function(){
@@ -144,6 +150,8 @@ angular.module( 'gojira.lists', [
         });
     }else{
       ListService.deleteMovieFromList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         listId, 
         $scope.movie.id,
         function(){
@@ -216,6 +224,8 @@ angular.module( 'gojira.lists', [
   };
   $scope.removeMovie = function(mid){
     ListService.deleteMovieFromList(
+      $rootScope.user._id, 
+      AuthService.getUserToken(),
       $scope.list._id, 
       mid,
       function(){
@@ -227,7 +237,7 @@ angular.module( 'gojira.lists', [
     $scope.loadingClass = AlertsService.getLoadingClass();
     $scope.loaded = false;
     $scope.imgUrl = $scope.conf.image.baseUrl;
-    ListService.getList( $scope.id,  function(list){
+    ListService.getList( $rootScope.user._id, $scope.id,  function(list){
       $scope.list = list;
       $scope.movies = $scope.movieStore = list.movies;
       $scope.loaded = true;
@@ -301,6 +311,8 @@ angular.module( 'gojira.lists', [
   $scope.toggleMovieList = function(mid, action){
     if(action == 'add'){
       ListService.addMovieToList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         $rootScope.user.lists[$scope.list._id], 
         mid,
         function(){
@@ -310,6 +322,8 @@ angular.module( 'gojira.lists', [
         });
     }else{
       ListService.deleteMovieFromList(
+        $rootScope.user._id, 
+        AuthService.getUserToken(),
         $scope.list._id, 
         mid,
         function(){

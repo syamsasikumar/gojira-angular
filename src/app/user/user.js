@@ -95,8 +95,14 @@ $scope.openLoginBox = function(){
 /**
 * Controller for user admin
 */
-.controller( 'UserCtrl', function UserCtrl ( $scope, $rootScope, $routeParams, $location, AlertsService) {
+.controller( 'UserCtrl', function UserCtrl ( $scope, $rootScope, $routeParams, $location, ListService, RatingService) {
   if($rootScope.user && $rootScope.user._id == $routeParams.id){
+    $scope.name = $rootScope.user.name;
+    $scope.listCount = ListService.getListCount();
+    $scope.listMovies = ListService.getListMovieCount();
+    $scope.ratingsCount = RatingService.getRatingsCount();
+    $scope.avgRating = RatingService.getAverageRating();
+    $scope.ratingClass = RatingService.getRatingClass($scope.avgRating);
 
   }else{
     $location.path('/');

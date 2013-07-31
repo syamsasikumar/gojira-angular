@@ -1,10 +1,8 @@
 angular.module('List', ['Alerts'])
-.factory('ListService', function($http, $rootScope, AlertsService, AuthService, ApiConfigService){
+.factory('ListService', function($http, $rootScope, AlertsService, AuthService, ApiConfigService, UtilityService){
   var _box = {};
   var _movie= {};
   var _list = {};
-  var _id = $rootScope.user ? $rootScope.user._id: 0;
-  var _token = AuthService.getUserToken();
   var _url = ApiConfigService.getConf().url.users;
   return {
     getListBox: function(){
@@ -32,11 +30,11 @@ angular.module('List', ['Alerts'])
         callback(lists);
       })
     },
-    getList: function(lid, cb){
+    getList: function(id, lid, cb){
       var callback = cb;
       var list = {};
       $http({
-        url: _url + '/lists/' + _id + '?lid=' + lid, 
+        url: _url + '/lists/' + id + '?lid=' + lid, 
         method: 'GET',
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
@@ -50,12 +48,12 @@ angular.module('List', ['Alerts'])
         callback(list);
       })
     },
-    saveList: function(list, callback){
+    saveList: function(uid, token, list, callback){
       var id = list._id;
       $http({
         url:_url + '/lists', 
         method: 'PUT',
-        data: {uid: _id, token:_token, list: list},
+        data: {uid: uid, token:token, list: list},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -73,12 +71,12 @@ angular.module('List', ['Alerts'])
         AlertsService.setAlert('error', 'List Operation failed');
       });
     },
-    deleteList: function(lid, callback){
+    deleteList: function(uid, token, lid, callback){
       var id = lid;
       $http({
         url:_url + '/lists', 
         method: 'DELETE',
-        data: {uid: _id, token:_token, lid: lid},
+        data: {uid: uid, token:token, lid: lid},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -107,11 +105,11 @@ angular.module('List', ['Alerts'])
       }
       return movieLists;
     },
-    addMovieToList: function( list, mid, callback){
+    addMovieToList: function( id, token, list, mid, callback){
       $http({
         url:_url + '/lists', 
         method: 'PUT',
-        data: {uid: _id, token:_token, list: list, mid:mid},
+        data: {uid: id, token:token, list: list, mid:mid},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -125,11 +123,11 @@ angular.module('List', ['Alerts'])
         AlertsService.setAlert('error', 'List Operation failed');
       });
     },
-    deleteMovieFromList: function(lid, mid, callback){
+    deleteMovieFromList: function(id, token, lid, mid, callback){
       $http({
         url:_url + '/lists', 
         method: 'DELETE',
-        data: {uid: _id, token: _token, lid: lid, mid:mid},
+        data: {uid: id, token: token, lid: lid, mid:mid},
         headers: { 'Content-Type': 'application/json; charset=UTF-8'}
       }).
       success(function(listData, status) {
@@ -168,5 +166,17 @@ angular.module('List', ['Alerts'])
     getListBoxData: function(){
       return _list;
     },
+    getListCount: function(){
+      return UtilityService.getObjectLength($rootScope.user.lists);
+    },
+    getListMovieCount: function(){
+      var count = 0;
+      var userLists = $rootScope.user.lists;
+      for(key in userLists){
+        var list = userLists[key];
+        count += UtilityService.getObjectLength(userLists[key].movies);
+      }
+      return count;
+    }
   };
 });
