@@ -1834,37 +1834,37 @@ angular.module("user/user.tpl.html", []).run(["$templateCache", function($templa
     "    <h3>{{name}}</h3>\n" +
     "    <div class=\"row-fluid row\">\n" +
     "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p><i class=\"icon-film\"></i> Movies Rated</p>\n" +
+    "        </div>\n" +
     "        <div class=\"dashboard-number center-align movies-rated\">\n" +
     "          {{ratingsCount}}\n" +
     "        </div>\n" +
-    "        <div class=\"dashboard-val center-align\">\n" +
-    "          <p>Movies Rated</p>\n" +
-    "        </div>\n" +
     "      </div>\n" +
     "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p><i class=\"icon-star\"></i> Average Rating</p>\n" +
+    "        </div>\n" +
     "        <div class=\"dashboard-number center-align\" ng-class=\"ratingClass\">\n" +
     "          {{avgRating}}\n" +
-    "        </div>\n" +
-    "        <div class=\"dashboard-val center-align\">\n" +
-    "          <p>Average Rating</p>\n" +
     "        </div>\n" +
     "      </div>\n" +
     "    </div>\n" +
     "    <div class=\"row-fluid row\">\n" +
     "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p><i class=\"icon-list\"></i> Lists Created</p>\n" +
+    "        </div>\n" +
     "        <div class=\"dashboard-number center-align lists-created\">\n" +
     "          {{listCount}}\n" +
     "        </div>\n" +
-    "        <div class=\"dashboard-val center-align\">\n" +
-    "          <p>Lists Created</p>\n" +
-    "        </div>\n" +
     "      </div>\n" +
     "      <div class=\"span6 dashboard-col\">\n" +
+    "        <div class=\"dashboard-val center-align\">\n" +
+    "          <p><i class=\"icon-list-alt\"></i> Movies In Lists</p>\n" +
+    "        </div>\n" +
     "        <div class=\"dashboard-number center-align list-movies\">\n" +
     "          {{listMovies}}\n" +
-    "        </div>\n" +
-    "        <div class=\"dashboard-val center-align\">\n" +
-    "          <p>Movies In Lists</p>\n" +
     "        </div>\n" +
     "      </div>\n" +
     "    </div>\n" +
