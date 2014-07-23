@@ -1,5 +1,5 @@
 ### Working development version ###
-http://syamsasikumar.github.io/gojira/#/search
+http://syamsasikumar.github.io/gojira-angular/#/search
 
 ### Overview ###
 
