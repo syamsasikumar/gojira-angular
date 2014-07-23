@@ -1,5 +1,7 @@
 ### Working development version ###
-http://syamsasikumar.github.io/gojira-angular/#/search
+http://tinyurl.com/ssmovs  -- or --  http://syamsasikumar.github.io/gojira-angular/#/search
+
+
 
 ### Overview ###
 
