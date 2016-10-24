@@ -1,4 +1,7 @@
 ### Working development version ###
+
+!NOTE - app runs off a free db backend. Login/Register function is disabled on purpose 
+
 http://tinyurl.com/ssmovs  -- or --  http://syamsasikumar.github.io/gojira-angular/#/search
 
 
